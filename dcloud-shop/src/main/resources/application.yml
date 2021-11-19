@@ -1,11 +1,11 @@
 server:
-  port: 8001
+  port: 8004
 
 
 #应用名称
 spring:
   application:
-    name: dcloud-account
+    name: dcloud-shop
 
   #服务注册发现
   cloud:
@@ -14,13 +14,6 @@ spring:
         server-addr: 47.100.86.147:8848
         username: nacos
         password: 2018LYW@#$
-
-  #数据库配置
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://47.100.86.147:3306/dcloud_account?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: 2018LYW@#$
 
 
 #配置plus打印sql日志
