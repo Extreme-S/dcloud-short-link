@@ -31,4 +31,4 @@ mybatis-plus:
 #----------sms短信配置--------------
 sms:
   app-code: fa6efe2ce40e491198544eeb23c027bd
-  template-id: 204013098
+  template-id: M72CB42894
