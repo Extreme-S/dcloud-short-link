@@ -2,6 +2,7 @@ package org.example.component;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.config.SmsConfig;
+import org.example.util.CommonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -36,19 +37,23 @@ public class SmsComponent {
      */
     public void send(String to, String templateId, String value) {
 
+        long beginTime = CommonUtil.getCurrentTimestamp();
+
         String url = String.format(URL_TEMPLATE, to, templateId, value);
         HttpHeaders headers = new HttpHeaders();
         //最后在header中的格式(中间是英文空格)为Authorization:APPCODE 83359fd73fe94948385f570e3c139105
         headers.set("Authorization", "APPCODE " + smsConfig.getAppCode());
-        HttpEntity<Object> entity = new HttpEntity<>(headers);
+        HttpEntity entity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-        log.info("url={},body={}", url, response.getBody());
+
+        long endTime = CommonUtil.getCurrentTimestamp();
+
+        log.info("耗时={},url={},body={}", endTime - beginTime, url, response.getBody());
         if (response.getStatusCode().is2xxSuccessful()) {
             log.info("发送短信验证码成功");
         } else {
             log.error("发送短信验证码失败:{}", response.getBody());
         }
-
     }
 
 
