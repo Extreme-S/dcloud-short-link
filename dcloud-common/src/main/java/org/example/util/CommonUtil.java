@@ -14,6 +14,7 @@ import java.util.*;
 
 @Slf4j
 public class CommonUtil {
+
     /**
      * 获取ip
      *
@@ -108,7 +109,6 @@ public class CommonUtil {
      * @return
      */
     public static String getRandomCode(int length) {
-
         String sources = "0123456789";
         Random random = new Random();
         StringBuilder sb = new StringBuilder();
