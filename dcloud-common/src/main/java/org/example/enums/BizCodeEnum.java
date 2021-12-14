@@ -12,7 +12,6 @@ public enum BizCodeEnum {
     GROUP_OPER_FAIL(23503, "分组名操作失败"),
     GROUP_NOT_EXIST(23404, "分组不存在"),
 
-
     /**
      * 验证码
      */
@@ -20,7 +19,6 @@ public enum BizCodeEnum {
     CODE_LIMITED(240002, "验证码发送过快"),
     CODE_ERROR(240003, "验证码错误"),
     CODE_CAPTCHA_ERROR(240101, "图形验证码错误"),
-
 
     /**
      * 账号
@@ -30,12 +28,10 @@ public enum BizCodeEnum {
     ACCOUNT_PWD_ERROR(250003, "账号或者密码错误"),
     ACCOUNT_UNLOGIN(250004, "账号未登录"),
 
-
     /**
      * 短链
      */
     SHORT_LINK_NOT_EXIST(260404, "短链不存在"),
-
 
     /**
      * 订单
@@ -55,14 +51,12 @@ public enum BizCodeEnum {
     PAY_ORDER_STATE_ERROR(300006, "订单状态不正常"),
     PAY_ORDER_PAY_TIMEOUT(300007, "订单支付超时"),
 
-
     /**
      * 流控操作
      */
     CONTROL_FLOW(500101, "限流控制"),
     CONTROL_DEGRADE(500201, "降级控制"),
     CONTROL_AUTH(500301, "认证控制"),
-
 
     /**
      * 流量包操作
@@ -73,7 +67,6 @@ public enum BizCodeEnum {
 
     TRAFFIC_EXCEPTION(600103, "流量包数据异常,用户无流量包"),
 
-
     /**
      * 通用操作码
      */
@@ -81,17 +74,17 @@ public enum BizCodeEnum {
     OPS_REPEAT(110001, "重复操作"),
     OPS_NETWORK_ADDRESS_ERROR(110002, "网络地址错误"),
 
-
     /**
      * 文件相关
      */
     FILE_UPLOAD_USER_IMG_FAIL(700101, "用户头像文件上传失败");
 
     @Getter
-    private String message;
+    private int code;
 
     @Getter
-    private int code;
+    private String message;
+
 
     private BizCodeEnum(int code, String message) {
         this.code = code;

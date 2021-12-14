@@ -44,7 +44,7 @@ public class RestTemplateConfig {
         connectionManager.setMaxTotal(500);
         //MaxPerRoute是对maxtotal的细分，每个主机的并发最大是300，route是指域名
         connectionManager.setDefaultMaxPerRoute(300);
-        /**
+        /*
          * 只请求 xxxx.net,最大并发300
          *
          * 请求 xxxx.net,最大并发300
