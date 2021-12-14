@@ -23,7 +23,7 @@ public class ThreadPoolTaskConfig {
         //executor.setAllowCoreThreadTimeOut(true);
 
         //阻塞队列 当核心线程数达到最大时，新任务会放在队列中排队等待执行
-        executor.setQueueCapacity(124);
+        executor.setQueueCapacity(1024);
 
         //最大线程池数量，当线程数>=corePoolSize，且任务队列已满时。线程池会创建新线程来处理任务
         //任务队列已满时, 且当线程数=maxPoolSize，，线程池会拒绝处理任务而抛出异常

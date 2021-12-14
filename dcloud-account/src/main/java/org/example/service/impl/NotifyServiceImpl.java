@@ -19,21 +19,4 @@ public class NotifyServiceImpl implements NotifyService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Override
-    @Async("threadPoolTaskExecutor")
-    public void testSend() {
-        long beginTime = CommonUtil.getCurrentTimestamp();
-        try {
-            TimeUnit.MILLISECONDS.sleep(4000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        long endTime = CommonUtil.getCurrentTimestamp();
-        log.info("耗时={}",endTime-beginTime);
-
-//        ResponseEntity<String> forEntity = restTemplate.getForEntity("http://old.xdclass.net", String.class);
-//        ResponseEntity<String> forEntity = restTemplate.getForEntity("https://www.baidu.com/", String.class);
-//        String body = forEntity.getBody();
-//        log.info(body);
-    }
 }

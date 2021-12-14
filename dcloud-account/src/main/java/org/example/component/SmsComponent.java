@@ -8,6 +8,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,6 +36,7 @@ public class SmsComponent {
      * @param templateId
      * @param value
      */
+    @Async("threadPoolTaskExecutor")
     public void send(String to, String templateId, String value) {
 
         long beginTime = CommonUtil.getCurrentTimestamp();
@@ -43,7 +45,7 @@ public class SmsComponent {
         HttpHeaders headers = new HttpHeaders();
         //最后在header中的格式(中间是英文空格)为Authorization:APPCODE 83359fd73fe94948385f570e3c139105
         headers.set("Authorization", "APPCODE " + smsConfig.getAppCode());
-        HttpEntity entity = new HttpEntity<>(headers);
+        HttpEntity<Object> entity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
         long endTime = CommonUtil.getCurrentTimestamp();

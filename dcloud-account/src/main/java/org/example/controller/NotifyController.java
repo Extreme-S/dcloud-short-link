@@ -22,7 +22,6 @@ public class NotifyController {
      */
     @GetMapping("send_code")
     public JsonData sendCode() {
-        notifyService.testSend();
         return JsonData.buildSuccess("自定义线程池测试");
     }
 }

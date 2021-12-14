@@ -44,13 +44,10 @@ public class RestTemplateConfig {
         connectionManager.setMaxTotal(500);
         //MaxPerRoute是对maxtotal的细分，每个主机的并发最大是300，route是指域名
         connectionManager.setDefaultMaxPerRoute(300);
-        /*
-         * 只请求 xxxx.net,最大并发300
-         *
-         * 请求 xxxx.net,最大并发300
-         * 请求 yyyy.com,最大并发200
-         */
 
+        //只请求 xxxx.net,最大并发300
+        //请求 xxxx.net,最大并发300
+        //请求 yyyy.com,最大并发200
         RequestConfig requestConfig = RequestConfig.custom()
             //返回数据的超时时间
             .setSocketTimeout(20000)
@@ -60,11 +57,9 @@ public class RestTemplateConfig {
             .setConnectionRequestTimeout(1000)
             .build();
 
-        CloseableHttpClient closeableHttpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig)
+        return HttpClientBuilder.create().setDefaultRequestConfig(requestConfig)
             .setConnectionManager(connectionManager)
             .build();
-
-        return closeableHttpClient;
     }
 
 
