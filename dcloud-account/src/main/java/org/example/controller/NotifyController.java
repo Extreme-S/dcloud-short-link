@@ -74,18 +74,15 @@ public class NotifyController {
      */
     @PostMapping("send_code")
     public JsonData sendCode(@RequestBody SendCodeRequest sendCodeRequest, HttpServletRequest request) {
-
+        //根据浏览器指纹生成key，并获取redis中的kaptcha验证码 和 request中的验证码
         String key = getKaptchaKey(request);
-
         String cacheKaptcha = redisTemplate.opsForValue().get(key);
-
         String kaptcha = sendCodeRequest.getKaptcha();
 
+        //kaptcha图形验证码匹配成功，发送短信/邮箱验证码
         if (kaptcha != null && cacheKaptcha != null && cacheKaptcha.equalsIgnoreCase(kaptcha)) {
-            //成功
             redisTemplate.delete(key);
-            JsonData jsonData = notifyService.sendCode(SendCodeEnum.USER_REGISTER, sendCodeRequest.getTo());
-            return jsonData;
+            return notifyService.sendCode(SendCodeEnum.USER_REGISTER, sendCodeRequest.getTo());
         } else {
             return JsonData.buildResult(BizCodeEnum.CODE_CAPTCHA_ERROR);
         }
