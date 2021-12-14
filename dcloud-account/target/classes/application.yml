@@ -15,6 +15,22 @@ spring:
         username: nacos
         password: 2018LYW@#$
 
+  redis:
+    client-type: jedis
+    host: 47.100.86.147
+    password: 2018LYW@#$
+    port: 6379
+    jedis:
+      pool:
+        # 连接池最大连接数（使用负值表示没有限制）
+        max-active: 100
+        # 连接池中的最大空闲连接
+        max-idle: 100
+        # 连接池中的最小空闲连接
+        min-idle: 100
+        # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-wait: 60000
+
   #数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
