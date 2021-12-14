@@ -17,7 +17,9 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-
+/**
+ * http连接池配置
+ */
 @Configuration
 public class RestTemplateConfig {
 
