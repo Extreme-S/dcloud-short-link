@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/account/v1")
+@RequestMapping("/api/notify/v1")
 @Slf4j
 public class NotifyController {
 
@@ -47,7 +47,7 @@ public class NotifyController {
      * @param request
      * @param response
      */
-    @GetMapping("captcha")
+    @GetMapping("kaptcha")
     public void getCaptcha(HttpServletRequest request, HttpServletResponse response) {
 
         String kaptchaText = kaptchaProducer.createText();

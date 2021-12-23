@@ -48,7 +48,7 @@ public class NotifyServiceImpl implements NotifyService {
 
         //如果短信/邮箱验证码不为空，再判断是否是60秒内重复发送 0122_232131321314132
         if (StringUtils.isNotBlank(cacheValue)) {
-            long ttl = Long.parseLong(cacheKey.split("_")[1]);
+            long ttl = Long.parseLong(cacheValue.split("_")[1]);
             //当前时间戳-验证码发送时的时间戳，如果小于60秒，则不给重复发送
             long leftTime = CommonUtil.getCurrentTimestamp() - ttl;
             if (leftTime < (1000 * 60)) {
