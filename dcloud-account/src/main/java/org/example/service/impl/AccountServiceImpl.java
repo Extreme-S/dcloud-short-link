@@ -15,6 +15,7 @@ import org.example.model.LoginUser;
 import org.example.service.AccountService;
 import org.example.service.NotifyService;
 import org.example.util.CommonUtil;
+import org.example.util.JWTUtil;
 import org.example.util.JsonData;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,8 +82,7 @@ public class AccountServiceImpl implements AccountService {
             if (md5Crypt.equalsIgnoreCase(accountDO.getPwd())) {
                 LoginUser loginUser = LoginUser.builder().build();
                 BeanUtils.copyProperties(accountDO, loginUser);
-                //生成TOKEN TODO
-                return JsonData.buildSuccess("");
+                return JsonData.buildSuccess(JWTUtil.geneJsonWebTokne(loginUser));
             } else {
                 return JsonData.buildResult(BizCodeEnum.ACCOUNT_PWD_ERROR);
             }
