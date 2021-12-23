@@ -44,7 +44,15 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-#----------sms短信配置--------------
+#--------------sms短信配置--------------
 sms:
   app-code: fa6efe2ce40e491198544eeb23c027bd
   template-id: M72CB42894
+
+#-------------阿里云OSS配置--------------
+aliyun:
+  oss:
+    endpoint: oss-cn-shanghai.aliyuncs.com
+    access-key-id: LTAI5tEnQGwgsUNxNdqRyS5v
+    access-key-secret: H9umfcIvCy83WwoaUPKADQs0LIHcyw
+    bucketname: dcloud-link-oss

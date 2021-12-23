@@ -53,12 +53,10 @@ public class NotifyController {
         String kaptchaText = kaptchaProducer.createText();
         log.info("验证码内容:{}", kaptchaText);
 
-        //存储redis,配置过期时间 TODO
+        //存储redis,配置过期时间
         redisTemplate.opsForValue()
             .set(getKaptchaKey(request), kaptchaText, KAPTCHA_CODE_EXPIRED, TimeUnit.MILLISECONDS);
-
         BufferedImage bufferedImage = kaptchaProducer.createImage(kaptchaText);
-
         try (ServletOutputStream outputStream = response.getOutputStream()) {
             ImageIO.write(bufferedImage, "jpg", outputStream);
             outputStream.flush();

@@ -11,12 +11,9 @@
 
     <artifactId>dcloud-common</artifactId>
 
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-    </properties>
 
     <dependencies>
+
         <!-- 代码自动生成依赖 begin -->
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -75,6 +72,10 @@
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
@@ -117,7 +118,8 @@
             <artifactId>spring-cloud-starter-loadbalancer</artifactId>
         </dependency>
 
-        <!--配置中心， 留坑，后续用的时候再讲-->
+
+        <!--配置中心， 留坑，后续用的时候再讲，解决方式，看springboot官方文档版本更新说明-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
@@ -175,6 +177,7 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
+
     </dependencies>
 
 </project>
