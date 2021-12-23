@@ -64,12 +64,33 @@ public class NotifyServiceImpl implements NotifyService {
 
         if (CheckUtil.isEmail(to)) {
             //发送邮箱验证码  TODO
-
         } else if (CheckUtil.isPhone(to)) {
-
             //发送手机验证码
             smsComponent.send(to, smsConfig.getTemplateId(), code);
         }
         return JsonData.buildSuccess();
+    }
+
+    /**
+     * 验证码校验逻辑
+     *
+     * @param sendCodeEnum
+     * @param to
+     * @param code
+     * @return
+     */
+    @Override
+    public boolean checkCode(SendCodeEnum sendCodeEnum, String to, String code) {
+        String cacheKey = String.format(RedisKey.CHECK_CODE_KEY, sendCodeEnum.name(), to);
+        String cacheValue = redisTemplate.opsForValue().get(cacheKey);
+        if (StringUtils.isNotBlank(cacheValue)) {
+            String cacheCode = cacheValue.split("_")[0];
+            if (cacheCode.equalsIgnoreCase(code)) {
+                //删除验证码
+                redisTemplate.delete(code);
+                return true;
+            }
+        }
+        return false;
     }
 }
