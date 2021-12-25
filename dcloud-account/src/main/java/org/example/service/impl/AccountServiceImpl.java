@@ -15,6 +15,7 @@ import org.example.model.LoginUser;
 import org.example.service.AccountService;
 import org.example.service.NotifyService;
 import org.example.util.CommonUtil;
+import org.example.util.IDUtil;
 import org.example.util.JWTUtil;
 import org.example.util.JsonData;
 import org.springframework.beans.BeanUtils;
@@ -55,7 +56,7 @@ public class AccountServiceImpl implements AccountService {
         //加密处理密码，生成accountDO对象插入数据库
         AccountDO accountDO = new AccountDO();
         BeanUtils.copyProperties(registerRequest, accountDO);
-        accountDO.setAccountNo(CommonUtil.getCurrentTimestamp());//账号唯一编号
+        accountDO.setAccountNo(Long.valueOf(IDUtil.geneSnowFlakeID().toString()));//账号唯一编号
         accountDO.setAuth(AuthTypeEnum.DEFAULT.name());//用户认证级别
         accountDO.setSecret("$1$" + CommonUtil.getStringNumRandom(8));//密钥
         String cryptPwd = Md5Crypt.md5Crypt(registerRequest.getPwd().getBytes(), accountDO.getSecret());//盐

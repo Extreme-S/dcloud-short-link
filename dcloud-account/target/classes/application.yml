@@ -71,7 +71,7 @@ spring:
             column: id
             props:
               worker:
-                id: 0
+                id: ${workId}
 
 
 

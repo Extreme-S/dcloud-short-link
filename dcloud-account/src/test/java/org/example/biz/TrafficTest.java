@@ -25,11 +25,12 @@ public class TrafficTest {
     @Test
     public void testSaveTraffic() {
         Random random = new Random();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1; i++) {
             TrafficDO trafficDO = new TrafficDO();
             trafficDO.setAccountNo((long) random.nextInt(100));
             trafficMapper.insert(trafficDO);
         }
+
     }
 
 
