@@ -65,6 +65,19 @@ spring:
             inline:
               algorithm-expression: traffic_$->{ account_no % 2 }
               sharding-column: account_no
+          #id生成策略
+          key-generator:
+            type: SNOWFLAKE
+            column: id
+            props:
+              worker:
+                id: 0
+
+
+
+
+
+
 
   #数据库配置
 #  datasource:
