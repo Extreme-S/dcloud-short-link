@@ -83,13 +83,10 @@ public class NotifyServiceImpl implements NotifyService {
     public boolean checkCode(SendCodeEnum sendCodeEnum, String to, String code) {
         String cacheKey = String.format(RedisKey.CHECK_CODE_KEY, sendCodeEnum.name(), to);
         String cacheValue = redisTemplate.opsForValue().get(cacheKey);
-        if (StringUtils.isNotBlank(cacheValue)) {
-            String cacheCode = cacheValue.split("_")[0];
-            if (cacheCode.equalsIgnoreCase(code)) {
-                //删除验证码
-                redisTemplate.delete(code);
-                return true;
-            }
+        //该用户的注册验证码缓存不为空 && 输入验证码与缓存中相同 ——》匹配成功，删除缓存中的验证码
+        if (StringUtils.isNotBlank(cacheValue) && code.equalsIgnoreCase(cacheValue.split("_")[0])) {
+            redisTemplate.delete(code);
+            return true;
         }
         return false;
     }

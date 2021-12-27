@@ -43,16 +43,15 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     public JsonData register(AccountRegisterRequest registerRequest) {
-        boolean checkCode = false;
-        //判断验证码
-        if (StringUtils.isNotBlank(registerRequest.getPhone())) {
-            checkCode = notifyService.checkCode(SendCodeEnum.USER_REGISTER, registerRequest.getPhone(),
-                registerRequest.getCode());
+        if (StringUtils.isEmpty(registerRequest.getPhone())) {//注册手机号不能为空
+            return JsonData.buildResult(BizCodeEnum.CODE_TO_ERROR);
         }
-        //验证码错误
+        boolean checkCode = notifyService.checkCode(SendCodeEnum.USER_REGISTER, registerRequest.getPhone(),
+            registerRequest.getCode());
         if (!checkCode) {
             return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
         }
+
         //加密处理密码，生成accountDO对象插入数据库
         AccountDO accountDO = new AccountDO();
         BeanUtils.copyProperties(registerRequest, accountDO);
@@ -61,13 +60,12 @@ public class AccountServiceImpl implements AccountService {
         accountDO.setSecret("$1$" + CommonUtil.getStringNumRandom(8));//密钥
         String cryptPwd = Md5Crypt.md5Crypt(registerRequest.getPwd().getBytes(), accountDO.getSecret());//盐
         accountDO.setPwd(cryptPwd);
-
         int rows = accountManager.insert(accountDO);
         log.info("rows:{},注册成功:{}", rows, accountDO);
+
         //用户注册成功，发放福利
         userRegisterInitTask(accountDO);
         return JsonData.buildSuccess();
-
     }
 
     /**
