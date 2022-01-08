@@ -25,8 +25,8 @@ public class ThreadPoolTaskConfig {
         //阻塞队列 当核心线程数达到最大时，新任务会放在队列中排队等待执行
         executor.setQueueCapacity(1024);
 
-        //最大线程池数量，当线程数>=corePoolSize，且任务队列已满时。线程池会创建新线程来处理任务
-        //任务队列已满时, 且当线程数=maxPoolSize，，线程池会拒绝处理任务而抛出异常
+        //最大线程池数量，当线程数>=corePoolSize，且任务队列已满时，线程池会创建新线程来处理任务
+        //任务队列已满时，且当线程数=maxPoolSize，，线程池会拒绝处理任务而抛出异常
         executor.setMaxPoolSize(64);
 
         //当线程空闲时间达到keepAliveTime时，线程会退出，直到线程数量=corePoolSize
@@ -35,7 +35,7 @@ public class ThreadPoolTaskConfig {
         executor.setKeepAliveSeconds(30);
 
         //spring 提供的 ThreadPoolTaskExecutor 线程池，是有setThreadNamePrefix() 方法的。
-        //jdk 提供的ThreadPoolExecutor 线程池是没有 setThreadNamePrefix() 方法的
+        //jdk 提供的 ThreadPoolExecutor 线程池是没有 setThreadNamePrefix() 方法的
         executor.setThreadNamePrefix("自定义线程池-");
 
         // rejection-policy：拒绝策略：当线程数已经达到maxSize的时候，如何处理新任务
