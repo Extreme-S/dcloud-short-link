@@ -20,7 +20,6 @@ public class ShardingTableConfig {
         tableSuffixList.add("a");
     }
 
-
     /**
      * 获取随机的后缀
      */
@@ -28,6 +27,4 @@ public class ShardingTableConfig {
         int index = random.nextInt(tableSuffixList.size());
         return tableSuffixList.get(index);
     }
-
-
 }
