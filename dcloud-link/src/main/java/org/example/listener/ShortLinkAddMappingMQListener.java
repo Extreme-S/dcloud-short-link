@@ -22,6 +22,7 @@ public class ShortLinkAddMappingMQListener {
         long tag = message.getMessageProperties().getDeliveryTag();
         try {
             //TODO 处理业务逻辑
+            int i = 1 / 0;
         } catch (Exception e) {
             //处理业务异常，还有进行其他操作，比如记录失败原因
             log.error("消费失败:{}", eventMessage);
@@ -29,7 +30,7 @@ public class ShortLinkAddMappingMQListener {
         }
         //确认消息消费成功
         log.info("消费成功:{}", eventMessage);
-        channel.basicAck(tag, false);
+        //channel.basicAck(tag, false);
     }
 
 
