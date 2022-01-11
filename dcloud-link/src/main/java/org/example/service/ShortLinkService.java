@@ -1,5 +1,7 @@
 package org.example.service;
 
+import org.example.controller.request.ShortLinkAddRequest;
+import org.example.util.JsonData;
 import org.example.vo.ShortLinkVO;
 
 /**
@@ -19,4 +21,11 @@ public interface ShortLinkService {
      * @return
      */
     ShortLinkVO parseShortLinkCode(String shortLinkCode);
+
+    /**
+     * 创建短链
+     * @param request
+     * @return
+     */
+    JsonData createShortLink(ShortLinkAddRequest request);
 }
