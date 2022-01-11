@@ -50,7 +50,7 @@ public class MyBatisPlusGenerator {
             .setDriverName("com.mysql.cj.jdbc.Driver")
             //TODO  TODO  TODO  TODO
             .setUrl("jdbc:mysql://47.100.86.147:3306/" +
-                "dcloud_link?useUnicode=true&characterEncoding=utf-8&" +
+                "dcloud_link_0?useUnicode=true&characterEncoding=utf-8&" +
                 "useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true")
             .setUsername("root")
             .setPassword("2018LYW@#$");
@@ -71,7 +71,7 @@ public class MyBatisPlusGenerator {
 
             // 生成的表, 支持多表一起生成，以数组形式填写
             //TODO  TODO  TODO  TODO
-            .setInclude("link_group", "short_link");
+            .setInclude("group_code_mapping_0", "domain");
 
         //4. 包名策略配置
         PackageConfig pkConfig = new PackageConfig();
