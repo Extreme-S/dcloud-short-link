@@ -26,7 +26,7 @@ public class ThreadPoolTaskConfig {
         executor.setQueueCapacity(1024);
 
         //最大线程池数量，当线程数>=corePoolSize，且任务队列已满时，线程池会创建新线程来处理任务
-        //任务队列已满时，且当线程数=maxPoolSize，，线程池会拒绝处理任务而抛出异常
+        //任务队列已满时，且当线程数=maxPoolSize，线程池会拒绝处理任务而抛出异常
         executor.setMaxPoolSize(64);
 
         //当线程空闲时间达到keepAliveTime时，线程会退出，直到线程数量=corePoolSize
