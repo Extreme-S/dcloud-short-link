@@ -79,7 +79,7 @@ public class GroupCodeMappingManagerImpl implements GroupCodeMappingManager {
 
     private GroupCodeMappingVO beanProcess(GroupCodeMappingDO groupCodeMappingDO) {
         GroupCodeMappingVO groupCodeMappingVO = new GroupCodeMappingVO();
-        BeanUtils.copyProperties(groupCodeMappingDO, );
+        BeanUtils.copyProperties(groupCodeMappingDO, groupCodeMappingVO);
         return groupCodeMappingVO;
     }
 
