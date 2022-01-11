@@ -1,5 +1,7 @@
 package org.example.component;
 
+import org.example.strategy.ShardingDBConfig;
+import org.example.strategy.ShardingTableConfig;
 import org.example.util.CommonUtil;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +20,10 @@ public class ShortLinkComponent {
      */
     public String createShortLinkCode(String param) {
         long murmurhash = CommonUtil.murmurHash32(param);
-        return encodeToBase62(murmurhash);
+        // 转换成62进制
+        String code = encodeToBase62(murmurhash);
+        // 拼接库位前缀 和 表位后缀
+        return ShardingDBConfig.getRandomDBPrefix() + code + ShardingTableConfig.getRandomTableSuffix();
     }
 
     /**
