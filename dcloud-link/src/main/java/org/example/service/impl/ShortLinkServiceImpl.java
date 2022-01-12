@@ -1,5 +1,7 @@
 package org.example.service.impl;
 
+import java.util.Arrays;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.example.component.ShortLinkComponent;
 import org.example.config.RabbitMQConfig;
@@ -26,6 +28,8 @@ import org.example.vo.ShortLinkVO;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -39,6 +43,9 @@ public class ShortLinkServiceImpl implements ShortLinkService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
 
     @Autowired
     private RabbitMQConfig rabbitMQConfig;
@@ -108,42 +115,52 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         String originalUrlDigest = CommonUtil.MD5(addRequest.getOriginalUrl());
         String shortLinkCode = shortLinkComponent.createShortLinkCode(addRequest.getOriginalUrl());
 
-        //TODO 加锁
+        //key1是短链码，ARGV[1]是accountNo,ARGV[2]是过期时间
+        String script =
+            "if redis.call('EXISTS',KEYS[1])==0 then " +
+                "redis.call('set',KEYS[1],ARGV[1]); " +
+                "redis.call('expire',KEYS[1],ARGV[2]); " +
+                "return 1; " +
+                "elseif redis.call('get',KEYS[1]) == ARGV[1] then " +
+                "return 2; " +
+                "else return 0; end;";
+        Long result = redisTemplate.execute(new DefaultRedisScript<>(script, Long.class), List.of(shortLinkCode),
+            accountNo, 100);
 
-        //先判断是否短链码被占用
-        ShortLinkDO ShortLinCodeDOInDB = shortLinkManager.findByShortLinCode(shortLinkCode);
-        if (ShortLinCodeDOInDB == null) {
-            if (EventMessageType.SHORT_LINK_ADD_LINK.name().equalsIgnoreCase(messageType)) {//C端处理
-                ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                    .accountNo(accountNo)
-                    .code(shortLinkCode)
-                    .title(addRequest.getTitle())
-                    .originalUrl(addRequest.getOriginalUrl())
-                    .domain(domainDO.getValue())
-                    .groupId(linkGroupDO.getId())
-                    .expired(addRequest.getExpired())
-                    .sign(originalUrlDigest)
-                    .state(ShortLinkStateEnum.ACTIVE.name())
-                    .del(0)
-                    .build();
-                shortLinkManager.addShortLink(shortLinkDO);
-                return true;
-            } else if (EventMessageType.SHORT_LINK_ADD_MAPPING.name().equalsIgnoreCase(messageType)) {//B端处理
-                GroupCodeMappingDO groupCodeMappingDO = GroupCodeMappingDO.builder()
-                    .accountNo(accountNo)
-                    .code(shortLinkCode)
-                    .title(addRequest.getTitle())
-                    .originalUrl(addRequest.getOriginalUrl())
-                    .domain(domainDO.getValue())
-                    .groupId(linkGroupDO.getId())
-                    .expired(addRequest.getExpired())
-                    .sign(originalUrlDigest)
-                    .state(ShortLinkStateEnum.ACTIVE.name())
-                    .del(0)
-                    .build();
-                groupCodeMappingManager.add(groupCodeMappingDO);
-                return true;
-            }
+        if (EventMessageType.SHORT_LINK_ADD_LINK.name().equalsIgnoreCase(messageType)) {//C端处理
+            //先判断是否短链码被占用
+            ShortLinkDO ShortLinCodeDOInDB = shortLinkManager.findByShortLinCode(shortLinkCode);
+            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .accountNo(accountNo)
+                .code(shortLinkCode)
+                .title(addRequest.getTitle())
+                .originalUrl(addRequest.getOriginalUrl())
+                .domain(domainDO.getValue())
+                .groupId(linkGroupDO.getId())
+                .expired(addRequest.getExpired())
+                .sign(originalUrlDigest)
+                .state(ShortLinkStateEnum.ACTIVE.name())
+                .del(0)
+                .build();
+            shortLinkManager.addShortLink(shortLinkDO);
+            return true;
+        } else if (EventMessageType.SHORT_LINK_ADD_MAPPING.name().equalsIgnoreCase(messageType)) {//B端处理
+            GroupCodeMappingDO groupCodeMappingDOInDB = groupCodeMappingManager.findByCodeAndGroupId(
+                shortLinkCode, linkGroupDO.getId(), accountNo);
+            GroupCodeMappingDO groupCodeMappingDO = GroupCodeMappingDO.builder()
+                .accountNo(accountNo)
+                .code(shortLinkCode)
+                .title(addRequest.getTitle())
+                .originalUrl(addRequest.getOriginalUrl())
+                .domain(domainDO.getValue())
+                .groupId(linkGroupDO.getId())
+                .expired(addRequest.getExpired())
+                .sign(originalUrlDigest)
+                .state(ShortLinkStateEnum.ACTIVE.name())
+                .del(0)
+                .build();
+            groupCodeMappingManager.add(groupCodeMappingDO);
+            return true;
         }
         return true;
     }

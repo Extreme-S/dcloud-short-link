@@ -57,9 +57,6 @@ public class LinkApiController {
 
     /**
      * 判断短链是否可用
-     *
-     * @param shortLinkVO
-     * @return
      */
     private static boolean isVisitable(ShortLinkVO shortLinkVO) {
         if ((shortLinkVO != null && shortLinkVO.getExpired().getTime() > CommonUtil.getCurrentTimestamp())) {
