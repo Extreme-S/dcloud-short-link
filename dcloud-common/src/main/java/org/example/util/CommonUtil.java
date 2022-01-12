@@ -160,9 +160,6 @@ public class CommonUtil {
 
     /**
      * 响应json数据给前端
-     *
-     * @param response
-     * @param obj
      */
     public static void sendJsonMessage(HttpServletResponse response, Object obj) {
         response.setContentType("application/json; charset=utf-8");
@@ -181,6 +178,42 @@ public class CommonUtil {
     public static long murmurHash32(String param) {
         long murmurHash32 = Hashing.murmur3_32().hashUnencodedChars(param).padToLong();
         return murmurHash32;
+    }
+
+    /**
+     * URL增加前缀
+     */
+    public static String addUrlPrefix(String url) {
+        return IDUtil.geneSnowFlakeID() + "&" + url;
+    }
+
+    /**
+     * 移除URL前缀
+     */
+    public static String removeUrlPrefix(String url) {
+        return url.substring(url.indexOf("&") + 1);
+    }
+
+    /**
+     * 如果短链码重复，则调用这个方法
+     * url前缀的编号递增1
+     * 如果还是用雪花算法，则容易C端和B端不一致，所以采用编号递增1的方式
+     * 123132432212&https://xdclass.net/download.html
+     */
+    public static String addUrlPrefixVersion(String url) {
+
+        //随机id
+        String version = url.substring(0, url.indexOf("&"));
+
+        //原始地址
+        String originalUrl = url.substring(url.indexOf("&") + 1);
+
+        //新id
+        Long newVersion = Long.parseLong(version) + 1;
+
+        String newUrl = newVersion + "&" + originalUrl;
+
+        return newUrl;
     }
 
 

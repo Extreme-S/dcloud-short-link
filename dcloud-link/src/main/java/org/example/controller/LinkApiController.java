@@ -32,8 +32,8 @@ public class LinkApiController {
      * 所以选择302虽然会增加服务器压力，但是有很多数据可以获取进行分析
      */
     @GetMapping(path = "/{shortLinkCode}")
-    public void dispatch(@PathVariable(name = "shortLinkCode") String shortLinkCode,
-        HttpServletRequest request, HttpServletResponse response) {
+    public void dispatch(@PathVariable(name = "shortLinkCode") String shortLinkCode, HttpServletRequest request,
+        HttpServletResponse response) {
         try {
             log.info("短链码:{}", shortLinkCode);
             //判断短链码是否合规
@@ -41,18 +41,17 @@ public class LinkApiController {
                 ShortLinkVO shortLinkVO = shortLinkService.parseShortLinkCode(shortLinkCode);
                 //判断是否过期和可用
                 if (isVisitable(shortLinkVO)) {
-                    // HTTP 302跳转
-                    response.setHeader("Location", shortLinkVO.getOriginalUrl());
+                    // 移除url前缀，HTTP 302跳转
+                    String originalUrl = CommonUtil.removeUrlPrefix(shortLinkVO.getOriginalUrl());
+                    response.setHeader("Location", originalUrl);
                     response.setStatus(HttpStatus.FOUND.value());
                 } else {
                     response.setStatus(HttpStatus.NOT_FOUND.value());
-                    return;
                 }
             }
         } catch (Exception e) {
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         }
-
     }
 
 

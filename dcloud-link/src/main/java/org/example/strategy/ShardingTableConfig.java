@@ -12,7 +12,6 @@ public class ShardingTableConfig {
      */
     private static final List<String> tableSuffixList = new ArrayList<>();
 
-    private static Random random = new Random();
 
     //配置启用那些表的后缀
     static {
@@ -21,10 +20,11 @@ public class ShardingTableConfig {
     }
 
     /**
-     * 获取随机的后缀
+     * 根据code生成表位后缀
      */
-    public static String getRandomTableSuffix() {
-        int index = random.nextInt(tableSuffixList.size());
+    public static String getRandomTableSuffix(String code) {
+        int hashCode = code.hashCode();
+        int index = Math.abs(hashCode) % tableSuffixList.size();
         return tableSuffixList.get(index);
     }
 }

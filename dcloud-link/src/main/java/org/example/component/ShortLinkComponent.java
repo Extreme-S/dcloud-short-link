@@ -23,7 +23,7 @@ public class ShortLinkComponent {
         // 转换成62进制
         String code = encodeToBase62(murmurhash);
         // 拼接库位前缀 和 表位后缀
-        return ShardingDBConfig.getRandomDBPrefix() + code + ShardingTableConfig.getRandomTableSuffix();
+        return ShardingDBConfig.getRandomDBPrefix(code) + code + ShardingTableConfig.getRandomTableSuffix(code);
     }
 
     /**

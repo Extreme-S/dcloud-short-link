@@ -9,10 +9,12 @@ import org.example.enums.EventMessageType;
 import org.example.enums.ShortLinkStateEnum;
 import org.example.interceptor.LoginInterceptor;
 import org.example.manager.DomainManager;
+import org.example.manager.GroupCodeMappingManager;
 import org.example.manager.LinkGroupManager;
 import org.example.manager.ShortLinkManager;
 import org.example.model.DomainDO;
 import org.example.model.EventMessage;
+import org.example.model.GroupCodeMappingDO;
 import org.example.model.LinkGroupDO;
 import org.example.model.ShortLinkDO;
 import org.example.service.ShortLinkService;
@@ -50,6 +52,9 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     @Autowired
     private ShortLinkComponent shortLinkComponent;
 
+    @Autowired
+    private GroupCodeMappingManager groupCodeMappingManager;
+
 
     @Override
     public ShortLinkVO parseShortLinkCode(String shortLinkCode) {
@@ -65,7 +70,11 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     @Override
     public JsonData createShortLink(ShortLinkAddRequest request) {
         Long accountNo = LoginInterceptor.threadLocal.get().getAccountNo();
-        EventMessage eventMessage = EventMessage.builder().accountNo(accountNo)
+        //处理原始URL，拼接前缀，使得一个原始URL可以对应对歌短链码
+        String newOriginalUrl = CommonUtil.addUrlPrefix(request.getOriginalUrl());
+        request.setOriginalUrl(newOriginalUrl);
+        EventMessage eventMessage = EventMessage.builder()
+            .accountNo(accountNo)
             .content(JsonUtil.obj2Json(request))
             .messageId(IDUtil.geneSnowFlakeID().toString())
             .eventMessageType(EventMessageType.SHORT_LINK_ADD.name())
@@ -98,19 +107,44 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         //MD5长链摘要，生成短链码，构造shortLinkDO对象
         String originalUrlDigest = CommonUtil.MD5(addRequest.getOriginalUrl());
         String shortLinkCode = shortLinkComponent.createShortLinkCode(addRequest.getOriginalUrl());
-        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-            .accountNo(accountNo)
-            .code(shortLinkCode)
-            .title(addRequest.getTitle())
-            .originalUrl(addRequest.getOriginalUrl())
-            .domain(domainDO.getValue())
-            .groupId(linkGroupDO.getId())
-            .expired(addRequest.getExpired())
-            .sign(originalUrlDigest)
-            .state(ShortLinkStateEnum.ACTIVE.name())
-            .del(0)
-            .build();
-        shortLinkManager.addShortLink(shortLinkDO);
+
+        //TODO 加锁
+
+        //先判断是否短链码被占用
+        ShortLinkDO ShortLinCodeDOInDB = shortLinkManager.findByShortLinCode(shortLinkCode);
+        if (ShortLinCodeDOInDB == null) {
+            if (EventMessageType.SHORT_LINK_ADD_LINK.name().equalsIgnoreCase(messageType)) {//C端处理
+                ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                    .accountNo(accountNo)
+                    .code(shortLinkCode)
+                    .title(addRequest.getTitle())
+                    .originalUrl(addRequest.getOriginalUrl())
+                    .domain(domainDO.getValue())
+                    .groupId(linkGroupDO.getId())
+                    .expired(addRequest.getExpired())
+                    .sign(originalUrlDigest)
+                    .state(ShortLinkStateEnum.ACTIVE.name())
+                    .del(0)
+                    .build();
+                shortLinkManager.addShortLink(shortLinkDO);
+                return true;
+            } else if (EventMessageType.SHORT_LINK_ADD_MAPPING.name().equalsIgnoreCase(messageType)) {//B端处理
+                GroupCodeMappingDO groupCodeMappingDO = GroupCodeMappingDO.builder()
+                    .accountNo(accountNo)
+                    .code(shortLinkCode)
+                    .title(addRequest.getTitle())
+                    .originalUrl(addRequest.getOriginalUrl())
+                    .domain(domainDO.getValue())
+                    .groupId(linkGroupDO.getId())
+                    .expired(addRequest.getExpired())
+                    .sign(originalUrlDigest)
+                    .state(ShortLinkStateEnum.ACTIVE.name())
+                    .del(0)
+                    .build();
+                groupCodeMappingManager.add(groupCodeMappingDO);
+                return true;
+            }
+        }
         return true;
     }
 

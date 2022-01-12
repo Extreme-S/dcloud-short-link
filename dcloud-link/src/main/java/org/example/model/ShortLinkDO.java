@@ -5,15 +5,20 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import java.util.Date;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("short_link")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ShortLinkDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
