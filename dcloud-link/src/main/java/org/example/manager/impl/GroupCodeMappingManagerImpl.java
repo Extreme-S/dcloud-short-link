@@ -54,7 +54,8 @@ public class GroupCodeMappingManagerImpl implements GroupCodeMappingManager {
         Page<GroupCodeMappingDO> groupCodeMappingDOPage = groupCodeMappingMapper.selectPage(pageInfo,
             new QueryWrapper<GroupCodeMappingDO>()
                 .eq("account_no", accountNo)
-                .eq("group_id", groupId));
+                .eq("group_id", groupId)
+                .eq("del", 0));
 
         Map<String, Object> pageMap = new HashMap<>(3);
         pageMap.put("total_record", groupCodeMappingDOPage.getTotal());
@@ -72,6 +73,7 @@ public class GroupCodeMappingManagerImpl implements GroupCodeMappingManager {
             .eq("code", shortLinkCode)
             .eq("account_no", accountNo)
             .eq("group_id", groupId)
+            .eq("del", 0)
             .set("state", shortLinkStateEnum.name()));
         return rows;
     }
@@ -81,7 +83,8 @@ public class GroupCodeMappingManagerImpl implements GroupCodeMappingManager {
         GroupCodeMappingDO groupCodeMappingDO = groupCodeMappingMapper.selectOne(new QueryWrapper<GroupCodeMappingDO>()
             .eq("code", shortLinkCode)
             .eq("account_no", accountNo)
-            .eq("group_id", groupId));
+            .eq("group_id", groupId)
+            .eq("del", 0));
         return groupCodeMappingDO;
     }
 

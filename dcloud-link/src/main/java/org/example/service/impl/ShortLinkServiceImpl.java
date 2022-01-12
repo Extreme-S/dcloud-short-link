@@ -2,11 +2,13 @@ package org.example.service.impl;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.example.component.ShortLinkComponent;
 import org.example.config.RabbitMQConfig;
 import org.example.controller.request.ShortLinkAddRequest;
+import org.example.controller.request.ShortLinkPageRequest;
 import org.example.enums.DomainTypeEnum;
 import org.example.enums.EventMessageType;
 import org.example.enums.ShortLinkStateEnum;
@@ -183,6 +185,13 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             handlerAddShortLink(eventMessage);
         }
         return false;
+    }
+
+    @Override
+    public Map<String, Object> pageByGroupId(ShortLinkPageRequest request) {
+        Long accountNo = LoginInterceptor.threadLocal.get().getAccountNo();
+        return groupCodeMappingManager.pageShortLinkByGroupId(
+            request.getPage(), request.getSize(), accountNo, request.getGroupId());
     }
 
     /**
