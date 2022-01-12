@@ -2,6 +2,7 @@ package org.example.service.impl;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.example.component.ShortLinkComponent;
 import org.example.config.RabbitMQConfig;
@@ -126,43 +127,62 @@ public class ShortLinkServiceImpl implements ShortLinkService {
                 "else return 0; end;";
         Long result = redisTemplate.execute(new DefaultRedisScript<>(script, Long.class), List.of(shortLinkCode),
             accountNo, 100);
+        boolean duplicateCodeFlag = false;
 
-        if (EventMessageType.SHORT_LINK_ADD_LINK.name().equalsIgnoreCase(messageType)) {//C端处理
-            //先判断是否短链码被占用
-            ShortLinkDO ShortLinCodeDOInDB = shortLinkManager.findByShortLinCode(shortLinkCode);
-            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                .accountNo(accountNo)
-                .code(shortLinkCode)
-                .title(addRequest.getTitle())
-                .originalUrl(addRequest.getOriginalUrl())
-                .domain(domainDO.getValue())
-                .groupId(linkGroupDO.getId())
-                .expired(addRequest.getExpired())
-                .sign(originalUrlDigest)
-                .state(ShortLinkStateEnum.ACTIVE.name())
-                .del(0)
-                .build();
-            shortLinkManager.addShortLink(shortLinkDO);
-            return true;
-        } else if (EventMessageType.SHORT_LINK_ADD_MAPPING.name().equalsIgnoreCase(messageType)) {//B端处理
-            GroupCodeMappingDO groupCodeMappingDOInDB = groupCodeMappingManager.findByCodeAndGroupId(
-                shortLinkCode, linkGroupDO.getId(), accountNo);
-            GroupCodeMappingDO groupCodeMappingDO = GroupCodeMappingDO.builder()
-                .accountNo(accountNo)
-                .code(shortLinkCode)
-                .title(addRequest.getTitle())
-                .originalUrl(addRequest.getOriginalUrl())
-                .domain(domainDO.getValue())
-                .groupId(linkGroupDO.getId())
-                .expired(addRequest.getExpired())
-                .sign(originalUrlDigest)
-                .state(ShortLinkStateEnum.ACTIVE.name())
-                .del(0)
-                .build();
-            groupCodeMappingManager.add(groupCodeMappingDO);
-            return true;
+        //加锁成功
+        if (result > 0) {
+            //C端处理
+            if (EventMessageType.SHORT_LINK_ADD_LINK.name().equalsIgnoreCase(messageType)) {
+                //先判断是否短链码被占用
+                ShortLinkDO shortLinCodeDOInDB = shortLinkManager.findByShortLinCode(shortLinkCode);
+                if (shortLinCodeDOInDB == null) {
+                    ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                        .accountNo(accountNo).code(shortLinkCode)
+                        .title(addRequest.getTitle()).originalUrl(addRequest.getOriginalUrl())
+                        .domain(domainDO.getValue()).groupId(linkGroupDO.getId())
+                        .expired(addRequest.getExpired()).sign(originalUrlDigest)
+                        .state(ShortLinkStateEnum.ACTIVE.name()).del(0).build();
+                    shortLinkManager.addShortLink(shortLinkDO);
+                    return true;
+                } else {
+                    log.error("C端短链码重复:{}", eventMessage);
+                    duplicateCodeFlag = true;
+                }
+            } else if (EventMessageType.SHORT_LINK_ADD_MAPPING.name().equalsIgnoreCase(messageType)) {
+                //B端处理
+                GroupCodeMappingDO groupCodeMappingDOInDB = groupCodeMappingManager.findByCodeAndGroupId(
+                    shortLinkCode, linkGroupDO.getId(), accountNo);
+                if (groupCodeMappingDOInDB == null) {
+                    GroupCodeMappingDO groupCodeMappingDO = GroupCodeMappingDO.builder()
+                        .accountNo(accountNo).code(shortLinkCode).title(addRequest.getTitle())
+                        .originalUrl(addRequest.getOriginalUrl())
+                        .domain(domainDO.getValue()).groupId(linkGroupDO.getId())
+                        .expired(addRequest.getExpired()).sign(originalUrlDigest)
+                        .state(ShortLinkStateEnum.ACTIVE.name()).del(0).build();
+                    groupCodeMappingManager.add(groupCodeMappingDO);
+                    return true;
+                } else {
+                    log.error("B端短链码重复:{}", eventMessage);
+                    duplicateCodeFlag = true;
+                }
+            }
+        } else {
+            //加锁失败，自旋100毫秒，再调用； 失败的可能是短链码已经被占用，需要重新生成
+            log.error("加锁失败:{}", eventMessage);
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+            }
+            duplicateCodeFlag = true;
         }
-        return true;
+        if (duplicateCodeFlag) {
+            String newOriginalUrl = CommonUtil.addUrlPrefixVersion(addRequest.getOriginalUrl());
+            addRequest.setOriginalUrl(newOriginalUrl);
+            eventMessage.setContent(JsonUtil.obj2Json(addRequest));
+            log.warn("短链码报错失败，重新生成:{}", eventMessage);
+            handlerAddShortLink(eventMessage);
+        }
+        return false;
     }
 
     /**
