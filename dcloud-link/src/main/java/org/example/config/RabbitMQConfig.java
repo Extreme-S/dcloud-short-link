@@ -21,12 +21,9 @@ public class RabbitMQConfig {
     /**
      * 创建交换机 Topic类型
      * 一般一个微服务一个交换机
-     *
-     * @return
      */
     @Bean
     public Exchange shortLinkEventExchange() {
-
         return new TopicExchange(shortLinkEventExchange, true, false);
     }
 

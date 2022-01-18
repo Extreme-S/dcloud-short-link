@@ -3,7 +3,9 @@ package org.example.controller;
 
 import java.util.Map;
 import org.example.controller.request.ShortLinkAddRequest;
+import org.example.controller.request.ShortLinkDelRequest;
 import org.example.controller.request.ShortLinkPageRequest;
+import org.example.controller.request.ShortLinkUpdateRequest;
 import org.example.service.ShortLinkService;
 import org.example.util.JsonData;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,22 @@ public class ShortLinkController {
     public JsonData pageByGroupId(@RequestBody ShortLinkPageRequest request) {
         Map<String, Object> result = shortLinkService.pageByGroupId(request);
         return JsonData.buildSuccess(result);
+    }
+
+    /**
+     * 删除短链
+     */
+    @PostMapping("del")
+    public JsonData del(@RequestBody ShortLinkDelRequest request) {
+        return shortLinkService.del(request);
+    }
+
+    /**
+     * 更新短链
+     */
+    @PostMapping("del")
+    public JsonData update(@RequestBody ShortLinkUpdateRequest request) {
+        return shortLinkService.update(request);
     }
 
 

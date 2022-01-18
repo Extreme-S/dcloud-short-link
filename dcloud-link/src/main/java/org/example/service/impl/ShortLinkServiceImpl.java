@@ -1,6 +1,5 @@
 package org.example.service.impl;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.component.ShortLinkComponent;
 import org.example.config.RabbitMQConfig;
 import org.example.controller.request.ShortLinkAddRequest;
+import org.example.controller.request.ShortLinkDelRequest;
 import org.example.controller.request.ShortLinkPageRequest;
+import org.example.controller.request.ShortLinkUpdateRequest;
 import org.example.enums.DomainTypeEnum;
 import org.example.enums.EventMessageType;
 import org.example.enums.ShortLinkStateEnum;
@@ -68,7 +69,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
 
     @Override
     public ShortLinkVO parseShortLinkCode(String shortLinkCode) {
-        ShortLinkDO shortLinkDO = shortLinkManager.findByShortLinCode(shortLinkCode);
+        ShortLinkDO shortLinkDO = shortLinkManager.findByShortLinkCode(shortLinkCode);
         if (shortLinkDO == null) {
             return null;
         }
@@ -80,14 +81,14 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     @Override
     public JsonData createShortLink(ShortLinkAddRequest request) {
         Long accountNo = LoginInterceptor.threadLocal.get().getAccountNo();
-        //处理原始URL，拼接前缀，使得一个原始URL可以对应对歌短链码
+        //为原始URL拼接前缀，使得一个原始URL可以对应多个短链码
         String newOriginalUrl = CommonUtil.addUrlPrefix(request.getOriginalUrl());
         request.setOriginalUrl(newOriginalUrl);
         EventMessage eventMessage = EventMessage.builder()
-            .accountNo(accountNo)
-            .content(JsonUtil.obj2Json(request))
             .messageId(IDUtil.geneSnowFlakeID().toString())
             .eventMessageType(EventMessageType.SHORT_LINK_ADD.name())
+            .accountNo(accountNo)
+            .content(JsonUtil.obj2Json(request))
             .build();
 
         rabbitTemplate.convertAndSend(rabbitMQConfig.getShortLinkEventExchange(),
@@ -118,25 +119,23 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         String originalUrlDigest = CommonUtil.MD5(addRequest.getOriginalUrl());
         String shortLinkCode = shortLinkComponent.createShortLinkCode(addRequest.getOriginalUrl());
 
-        //key1是短链码，ARGV[1]是accountNo,ARGV[2]是过期时间
-        String script =
-            "if redis.call('EXISTS',KEYS[1])==0 then " +
-                "redis.call('set',KEYS[1],ARGV[1]); " +
-                "redis.call('expire',KEYS[1],ARGV[2]); " +
-                "return 1; " +
-                "elseif redis.call('get',KEYS[1]) == ARGV[1] then " +
-                "return 2; " +
-                "else return 0; end;";
-        Long result = redisTemplate.execute(new DefaultRedisScript<>(script, Long.class), List.of(shortLinkCode),
-            accountNo, 100);
+        // key1是短链码，ARGV[1]是accountNo,ARGV[2]是过期时间
+        String script = "if redis.call('EXISTS',KEYS[1])==0 then " +
+            "redis.call('set',KEYS[1],ARGV[1]); " +
+            "redis.call('expire',KEYS[1],ARGV[2]); " +
+            "return 1; " +
+            "elseif redis.call('get',KEYS[1]) == ARGV[1] then " +
+            "return 2; " +
+            "else return 0; end;";
+        Long result = redisTemplate.execute(
+            new DefaultRedisScript<>(script, Long.class), List.of(shortLinkCode), accountNo, 100);
         boolean duplicateCodeFlag = false;
 
         //加锁成功
         if (result > 0) {
-            //C端处理
             if (EventMessageType.SHORT_LINK_ADD_LINK.name().equalsIgnoreCase(messageType)) {
-                //先判断是否短链码被占用
-                ShortLinkDO shortLinCodeDOInDB = shortLinkManager.findByShortLinCode(shortLinkCode);
+                // C端添加短链码信息
+                ShortLinkDO shortLinCodeDOInDB = shortLinkManager.findByShortLinkCode(shortLinkCode);
                 if (shortLinCodeDOInDB == null) {
                     ShortLinkDO shortLinkDO = ShortLinkDO.builder()
                         .accountNo(accountNo).code(shortLinkCode)
@@ -151,7 +150,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
                     duplicateCodeFlag = true;
                 }
             } else if (EventMessageType.SHORT_LINK_ADD_MAPPING.name().equalsIgnoreCase(messageType)) {
-                //B端处理
+                // B端添加短链码的映射关系
                 GroupCodeMappingDO groupCodeMappingDOInDB = groupCodeMappingManager.findByCodeAndGroupId(
                     shortLinkCode, linkGroupDO.getId(), accountNo);
                 if (groupCodeMappingDOInDB == null) {
@@ -192,6 +191,34 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         Long accountNo = LoginInterceptor.threadLocal.get().getAccountNo();
         return groupCodeMappingManager.pageShortLinkByGroupId(
             request.getPage(), request.getSize(), accountNo, request.getGroupId());
+    }
+
+
+    @Override
+    public JsonData del(ShortLinkDelRequest request) {
+        Long accountNo = LoginInterceptor.threadLocal.get().getAccountNo();
+        EventMessage eventMessage = EventMessage.builder()
+            .accountNo(accountNo)
+            .content(JsonUtil.obj2Json(request))
+            .messageId(IDUtil.geneSnowFlakeID().toString())
+            .eventMessageType(EventMessageType.SHORT_LINK_DEL.name())
+            .build();
+        //TODO
+        return JsonData.buildSuccess();
+    }
+
+
+    @Override
+    public JsonData update(ShortLinkUpdateRequest request) {
+        Long accountNo = LoginInterceptor.threadLocal.get().getAccountNo();
+        EventMessage eventMessage = EventMessage.builder()
+            .accountNo(accountNo)
+            .content(JsonUtil.obj2Json(request))
+            .messageId(IDUtil.geneSnowFlakeID().toString())
+            .eventMessageType(EventMessageType.SHORT_LINK_UPDATE.name())
+            .build();
+        //TODO
+        return JsonData.buildSuccess();
     }
 
     /**

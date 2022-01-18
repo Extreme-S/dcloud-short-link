@@ -22,19 +22,18 @@ public class ShortLinkManagerImpl implements ShortLinkManager {
     }
 
     @Override
-    public ShortLinkDO findByShortLinCode(String shortLinkCode) {
-        ShortLinkDO shortLinkDO = shortLinkMapper.selectOne(new QueryWrapper<ShortLinkDO>()
+    public ShortLinkDO findByShortLinkCode(String shortLinkCode) {
+        return shortLinkMapper.selectOne(new QueryWrapper<ShortLinkDO>()
             .eq("code", shortLinkCode)
             .eq("del", 0));
-        return shortLinkDO;
     }
 
     @Override
     public int del(String shortLinkCode, Long accountNo) {
         ShortLinkDO shortLinkDO = new ShortLinkDO();
         shortLinkDO.setDel(1);
-        int rows = shortLinkMapper.update(shortLinkDO,
-            new QueryWrapper<ShortLinkDO>().eq("code", shortLinkCode).eq("account_no", accountNo));
-        return rows;
+        return shortLinkMapper.update(shortLinkDO, new QueryWrapper<ShortLinkDO>()
+            .eq("code", shortLinkCode)
+            .eq("account_no", accountNo));
     }
 }
