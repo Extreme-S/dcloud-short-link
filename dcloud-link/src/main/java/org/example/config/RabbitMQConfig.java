@@ -89,5 +89,65 @@ public class RabbitMQConfig {
     }
 
 
+
+    //删除短链相关配置====================================
+    /**
+     * 删除短链 队列
+     */
+    private String shortLinkDelLinkQueue="short_link.del.link.queue";
+
+    /**
+     * 删除短链映射 队列
+     */
+    private String shortLinkDelMappingQueue="short_link.del.mapping.queue";
+
+    /**
+     * 删除短链具体的routingKey,【发送消息使用】
+     */
+    private String shortLinkDelRoutingKey="short_link.del.link.mapping.routing.key";
+
+    /**
+     * topic类型的binding key，用于绑定队列和交换机，是用于 link 消费者
+     */
+    private String shortLinkDelLinkBindingKey="short_link.del.link.*.routing.key";
+
+    /**
+     * topic类型的binding key，用于绑定队列和交换机，是用于 mapping 消费者
+     */
+    private String shortLinkDelMappingBindingKey="short_link.del.*.mapping.routing.key";
+
+    /**
+     * 删除操作  短链api队列 和交换机的绑定关系建立
+     */
+    @Bean
+    public Binding shortLinkDelApiBinding(){
+        return new Binding(shortLinkDelLinkQueue,Binding.DestinationType.QUEUE, shortLinkEventExchange,shortLinkDelLinkBindingKey,null);
+    }
+
+    /**
+     * 删除操作 短链mapping队列和交换机的绑定关系建立
+     */
+    @Bean
+    public Binding shortLinkDelMappingBinding(){
+        return new Binding(shortLinkDelMappingQueue,Binding.DestinationType.QUEUE, shortLinkEventExchange,shortLinkDelMappingBindingKey,null);
+    }
+
+    /**
+     * 删除操作 短链api 普通队列，用于被监听
+     */
+    @Bean
+    public Queue shortLinkDelLinkQueue(){
+        return new Queue(shortLinkDelLinkQueue,true,false,false);
+    }
+
+    /**
+     * 删除操作 短链mapping 普通队列，用于被监听
+     */
+    @Bean
+    public Queue shortLinkDelMappingQueue(){
+        return new Queue(shortLinkDelMappingQueue,true,false,false);
+    }
+
+
 }
 
