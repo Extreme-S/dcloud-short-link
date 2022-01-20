@@ -50,7 +50,7 @@ public class ShortLinkController {
     /**
      * 更新短链
      */
-    @PostMapping("del")
+    @PostMapping("update")
     public JsonData update(@RequestBody ShortLinkUpdateRequest request) {
         return shortLinkService.update(request);
     }
