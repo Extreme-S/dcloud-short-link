@@ -19,7 +19,7 @@ public interface GroupCodeMappingManager {
     /**
      * 根据短链码删除
      */
-    int del(String shortLinkCode, Long accountNo, Long groupId);
+    int del(GroupCodeMappingDO groupCodeMappingDO);
 
     /**
      * 分页查找
@@ -36,4 +36,9 @@ public interface GroupCodeMappingManager {
      * 查找是否存在GroupCodeMappingDO对象
      */
     GroupCodeMappingDO findByCodeAndGroupId(String shortLinkCode, Long groupId, Long accountNo);
+
+    /**
+     * 更新B端短链信息
+     */
+    int update(GroupCodeMappingDO groupCodeMappingDO);
 }

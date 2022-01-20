@@ -29,7 +29,7 @@ public class ShortLinkUpdateLinkMQListener {
         log.info("监听到消息ShortLinkUpdateLinkMQListener message消息内容:{}", message);
         try {
             eventMessage.setEventMessageType(EventMessageType.SHORT_LINK_UPDATE_LINK.name());
-            //TODO 处理短链更新消息
+            shortLinkService.handleUpdateShortLink(eventMessage);
         } catch (Exception e) {
             //处理业务异常，还有进行其他操作，比如记录失败原因
             log.error("消费失败:{}", eventMessage);

@@ -108,7 +108,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
      * 8、保存数据库
      */
     @Override
-    public boolean handlerAddShortLink(EventMessage eventMessage) {
+    public boolean handleAddShortLink(EventMessage eventMessage) {
         Long accountNo = eventMessage.getAccountNo();
         String messageType = eventMessage.getEventMessageType();
         ShortLinkAddRequest addRequest = JsonUtil.json2Obj(eventMessage.getContent(), ShortLinkAddRequest.class);
@@ -181,7 +181,69 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             addRequest.setOriginalUrl(newOriginalUrl);
             eventMessage.setContent(JsonUtil.obj2Json(addRequest));
             log.warn("短链码报错失败，重新生成:{}", eventMessage);
-            handlerAddShortLink(eventMessage);
+            handleAddShortLink(eventMessage);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean handleUpdateShortLink(EventMessage eventMessage) {
+        Long accountNo = eventMessage.getAccountNo();
+        String messageType = eventMessage.getEventMessageType();
+        ShortLinkUpdateRequest request = JsonUtil.json2Obj(eventMessage.getContent(), ShortLinkUpdateRequest.class);
+        //校验短链域名
+        DomainDO domainDO = checkDomain(request.getDomainType(), request.getDomainId(), accountNo);
+        if (EventMessageType.SHORT_LINK_UPDATE_LINK.name().equalsIgnoreCase(messageType)) {
+            //C端处理
+            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .code(request.getCode())
+                .title(request.getTitle())
+                .domain(domainDO.getValue())
+                .accountNo(accountNo)
+                .build();
+            int rows = shortLinkManager.update(shortLinkDO);
+            log.debug("更新C端短链，rows={}", rows);
+            return true;
+        } else if (EventMessageType.SHORT_LINK_UPDATE_MAPPING.name().equalsIgnoreCase(messageType)) {
+            //B端处理
+            GroupCodeMappingDO groupCodeMappingDO = GroupCodeMappingDO.builder()
+                .id(request.getMappingId())
+                .groupId(request.getGroupId())
+                .accountNo(accountNo)
+                .title(request.getTitle())
+                .domain(domainDO.getValue())
+                .build();
+            int rows = groupCodeMappingManager.update(groupCodeMappingDO);
+            log.debug("更新B端短链，rows={}", rows);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean handleDelShortLink(EventMessage eventMessage) {
+        Long accountNo = eventMessage.getAccountNo();
+        String messageType = eventMessage.getEventMessageType();
+        ShortLinkDelRequest request = JsonUtil.json2Obj(eventMessage.getContent(), ShortLinkDelRequest.class);
+        if (EventMessageType.SHORT_LINK_DEL_LINK.name().equalsIgnoreCase(messageType)) {
+            //C端解析
+            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .code(request.getCode())
+                .accountNo(accountNo)
+                .build();
+            int rows = shortLinkManager.del(shortLinkDO);
+            log.debug("删除C端短链:{}", rows);
+            return true;
+        } else if (EventMessageType.SHORT_LINK_DEL_MAPPING.name().equalsIgnoreCase(messageType)) {
+            //B端处理
+            GroupCodeMappingDO groupCodeMappingDO = GroupCodeMappingDO.builder()
+                .id(request.getMappingId())
+                .accountNo(accountNo)
+                .groupId(request.getGroupId())
+                .build();
+            int rows = groupCodeMappingManager.del(groupCodeMappingDO);
+            log.debug("删除B端短链:{}", rows);
+            return true;
         }
         return false;
     }

@@ -29,7 +29,7 @@ public class ShortLinkAddLinkMQListener {
         try {
             // TODO 处理业务逻辑
             eventMessage.setEventMessageType(EventMessageType.SHORT_LINK_ADD_LINK.name());
-            shortLinkService.handlerAddShortLink(eventMessage);
+            shortLinkService.handleAddShortLink(eventMessage);
         } catch (Exception e) {
             // 处理业务异常，还有进行其他操作，比如记录失败原因
             log.error("消费失败:{}", eventMessage);
