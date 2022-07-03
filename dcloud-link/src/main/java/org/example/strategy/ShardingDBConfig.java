@@ -12,7 +12,7 @@ public class ShardingDBConfig {
      */
     private static final List<String> dbPrefixList = new ArrayList<>();
 
-    // 配置启用那些库的前缀
+    // 配置启用那些库的前缀，可以通过cv分配权重
     static {
         dbPrefixList.add("0");
         dbPrefixList.add("1");

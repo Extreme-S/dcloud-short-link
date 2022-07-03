@@ -141,9 +141,6 @@ public class CommonUtil {
 
     /**
      * 获取随机长度的串
-     *
-     * @param length
-     * @return
      */
     private static final String ALL_CHAR_NUM = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -189,8 +186,7 @@ public class CommonUtil {
      * murmurhash算法
      */
     public static long murmurHash32(String param) {
-        long murmurHash32 = Hashing.murmur3_32().hashUnencodedChars(param).padToLong();
-        return murmurHash32;
+        return Hashing.murmur3_32().hashUnencodedChars(param).padToLong();
     }
 
     /**
@@ -214,21 +210,14 @@ public class CommonUtil {
      * 123132432212&https://xdclass.net/download.html
      */
     public static String addUrlPrefixVersion(String url) {
-
         //随机id
         String version = url.substring(0, url.indexOf("&"));
-
         //原始地址
         String originalUrl = url.substring(url.indexOf("&") + 1);
-
         //新id
         Long newVersion = Long.parseLong(version) + 1;
-
-        String newUrl = newVersion + "&" + originalUrl;
-
-        return newUrl;
+        return newVersion + "&" + originalUrl;
     }
-
 
 
 }

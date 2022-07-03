@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import java.util.concurrent.TimeUnit;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.example.component.SmsComponent;
@@ -25,9 +26,6 @@ import org.springframework.web.client.RestTemplate;
 public class NotifyServiceImpl implements NotifyService {
 
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
     private SmsComponent smsComponent;
 
     @Autowired
@@ -38,7 +36,6 @@ public class NotifyServiceImpl implements NotifyService {
 
     //短信/邮箱验证码的有效时间
     private static final int CODE_EXPIRED = 60 * 1000 * 10;
-
 
     @Override
     public JsonData sendCode(SendCodeEnum sendCodeEnum, String to) {
@@ -73,11 +70,6 @@ public class NotifyServiceImpl implements NotifyService {
 
     /**
      * 验证码校验逻辑
-     *
-     * @param sendCodeEnum
-     * @param to
-     * @param code
-     * @return
      */
     @Override
     public boolean checkCode(SendCodeEnum sendCodeEnum, String to, String code) {

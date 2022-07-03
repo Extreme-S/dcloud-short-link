@@ -3,6 +3,7 @@ package org.example.controller;
 
 import java.util.Arrays;
 import java.util.List;
+
 import org.example.service.DomainService;
 import org.example.util.JsonData;
 import org.example.vo.DomainVO;
@@ -21,8 +22,6 @@ public class DomainController {
     @Autowired
     private DomainService domainService;
 
-
-
     /**
      * 列举全部可用域名列表
      */
@@ -31,7 +30,6 @@ public class DomainController {
         List<DomainVO> list = domainService.listAll();
         return JsonData.buildSuccess(list);
     }
-
 
 
 //    @GetMapping("test")

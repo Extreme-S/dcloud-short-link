@@ -3,6 +3,7 @@ package org.example.controller;
 
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
+
 import lombok.extern.slf4j.Slf4j;
 import org.example.controller.request.ConfirmOrderRequest;
 import org.example.enums.BizCodeEnum;
@@ -33,9 +34,9 @@ public class ProductOrderController {
      */
     @GetMapping("page")
     public JsonData page(
-        @RequestParam(value = "page", defaultValue = "1") int page,
-        @RequestParam(value = "size", defaultValue = "10") int size,
-        @RequestParam(value = "state", required = false) String state
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "state", required = false) String state
     ) {
         Map<String, Object> pageResult = productOrderService.page(page, size, state);
         return JsonData.buildSuccess(pageResult);
@@ -48,8 +49,8 @@ public class ProductOrderController {
     public JsonData queryState(@RequestParam(value = "out_trade_no") String outTradeNo) {
         String state = productOrderService.queryProductOrderState(outTradeNo);
         return StringUtils.isBlank(state)
-            ? JsonData.buildResult(BizCodeEnum.ORDER_CONFIRM_NOT_EXIST)
-            : JsonData.buildSuccess(state);
+                ? JsonData.buildResult(BizCodeEnum.ORDER_CONFIRM_NOT_EXIST)
+                : JsonData.buildSuccess(state);
     }
 
     /**
@@ -63,8 +64,8 @@ public class ProductOrderController {
             String client = orderRequest.getClientType();
             //支付类型
             String payType = orderRequest.getPayType();
-            //如果是支付宝支付，跳转网页，sdk除非
             if (payType.equalsIgnoreCase(ProductOrderPayTypeEnum.ALI_PAY.name())) {
+                //如果是支付宝支付，跳转网页，sdk除非
                 if (client.equalsIgnoreCase(ClientTypeEnum.PC.name())) {
                     CommonUtil.sendHtmlMessage(response, jsonData);
                 } else if (client.equalsIgnoreCase(ClientTypeEnum.APP.name())) {

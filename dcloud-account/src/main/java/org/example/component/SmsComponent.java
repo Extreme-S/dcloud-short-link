@@ -27,29 +27,20 @@ public class SmsComponent {
 
     @Autowired
     private SmsConfig smsConfig;
-
-
+    
     /**
      * 发送短信验证码
-     *
-     * @param to
-     * @param templateId
-     * @param value
      */
     @Async("threadPoolTaskExecutor")
     public void send(String to, String templateId, String value) {
-
         long beginTime = CommonUtil.getCurrentTimestamp();
-
         String url = String.format(URL_TEMPLATE, to, templateId, value);
         HttpHeaders headers = new HttpHeaders();
         //最后在header中的格式(中间是英文空格)为Authorization:APPCODE 83359fd73fe94948385f570e3c139105
         headers.set("Authorization", "APPCODE " + smsConfig.getAppCode());
         HttpEntity<Object> entity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-
         long endTime = CommonUtil.getCurrentTimestamp();
-
         log.info("耗时={},url={},body={}", endTime - beginTime, url, response.getBody());
         if (response.getStatusCode().is2xxSuccessful()) {
             log.info("发送短信验证码成功");

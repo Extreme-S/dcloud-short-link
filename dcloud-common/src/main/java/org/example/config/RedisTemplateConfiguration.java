@@ -40,7 +40,6 @@ public class RedisTemplateConfiguration {
         redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
 
         return redisTemplate;
-
     }
 
 }

@@ -2,21 +2,13 @@ package org.example.vo;
 
 import java.io.Serializable;
 import java.util.Date;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author 二当家小D
- * @since 2021-12-09
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class LinkGroupVO implements Serializable {
-
 
     private Long id;
 

@@ -14,7 +14,6 @@ public class CustomExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     @ResponseBody
     public JsonData handler(Exception e) {
-
         if (e instanceof BizException) {
             BizException bizException = (BizException) e;
             log.error("[业务异常]{}", e);
