@@ -66,6 +66,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
 
     @Autowired
     private GroupCodeMappingManager groupCodeMappingManager;
+    private EventMessage eventMessage;
 
 
     @Override
@@ -171,7 +172,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             log.error("加锁失败:{}", eventMessage);
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignored) {
             }
             duplicateCodeFlag = true;
         }

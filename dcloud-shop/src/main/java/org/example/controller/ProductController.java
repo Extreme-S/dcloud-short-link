@@ -19,7 +19,6 @@ public class ProductController {
 
     /**
      * 查看商品列表接口
-     * @return
      */
     @GetMapping("list")
     public JsonData list(){
@@ -29,8 +28,6 @@ public class ProductController {
 
     /**
      * 查看商品详情
-     * @param productId
-     * @return
      */
     @GetMapping("detail/{product_id}")
     public JsonData detail(@PathVariable("product_id") long productId){
