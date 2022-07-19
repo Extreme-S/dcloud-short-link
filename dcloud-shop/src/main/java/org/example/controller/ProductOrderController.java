@@ -78,7 +78,7 @@ public class ProductOrderController {
     @PostMapping("confirm")
     public void confirmOrder(@RequestBody ConfirmOrderRequest orderRequest, HttpServletResponse response) {
         JsonData jsonData = productOrderService.confirmOrder(orderRequest);
-        if (jsonData.getCode() == 0) {
+         if (jsonData.getCode() == 0) {
             //客户端类型
             String client = orderRequest.getClientType();
             //支付类型
@@ -90,7 +90,7 @@ public class ProductOrderController {
                 } else if (client.equalsIgnoreCase(ClientTypeEnum.APP.name())) {
                 } else if (client.equalsIgnoreCase(ClientTypeEnum.H5.name())) {
                 }
-            } else if (payType.equalsIgnoreCase(ProductOrderPayTypeEnum.WECHAT_APY.name())) {
+            } else if (payType.equalsIgnoreCase(ProductOrderPayTypeEnum.WECHAT_PAY.name())) {
                 //微信支付
                 CommonUtil.sendJsonMessage(response, jsonData);
             }

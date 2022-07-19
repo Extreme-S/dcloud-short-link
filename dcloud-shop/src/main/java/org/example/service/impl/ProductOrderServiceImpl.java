@@ -5,17 +5,17 @@ import java.util.Date;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.example.config.RabbitMQConfig;
 import org.example.constant.TimeConstant;
 import org.example.controller.request.ConfirmOrderRequest;
 import org.example.controller.request.ProductOrderPageRequest;
-import org.example.enums.BillTypeEnum;
-import org.example.enums.BizCodeEnum;
-import org.example.enums.ProductOrderPayTypeEnum;
-import org.example.enums.ProductOrderStateEnum;
+import org.example.enums.*;
 import org.example.exception.BizException;
 import org.example.interceptor.LoginInterceptor;
 import org.example.manager.ProductManager;
 import org.example.manager.ProductOrderManager;
+import org.example.model.EventMessage;
 import org.example.model.LoginUser;
 import org.example.model.ProductDO;
 import org.example.model.ProductOrderDO;
@@ -24,6 +24,7 @@ import org.example.util.CommonUtil;
 import org.example.util.JsonData;
 import org.example.util.JsonUtil;
 import org.example.vo.PayInfoVO;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,12 @@ public class ProductOrderServiceImpl implements ProductOrderService {
 
     @Autowired
     private ProductManager productManager;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private RabbitMQConfig rabbitMQConfig;
 
     @Override
     public Map<String, Object> page(ProductOrderPageRequest orderPageRequest) {
@@ -85,9 +92,62 @@ public class ProductOrderServiceImpl implements ProductOrderService {
                 .clientType(orderRequest.getClientType()).payType(orderRequest.getPayType())
                 .title(productDO.getTitle()).description("").payFee(orderRequest.getPayAmount())
                 .orderPayTimeoutMills(TimeConstant.ORDER_PAY_TIMEOUT_MILLS).build();
-        //发送延迟消息 TODO
+        //发送延迟消息
+        EventMessage eventMessage = EventMessage.builder()
+                .eventMessageType(EventMessageType.PRODUCT_ORDER_NEW.name())
+                .accountNo(loginUser.getAccountNo())
+                .bizId(orderOutTradeNo).build();
+        rabbitTemplate.convertAndSend(
+                rabbitMQConfig.getOrderEventExchange(), rabbitMQConfig.getOrderCloseDelayRoutingKey(), eventMessage);
         //调用支付信息 TODO
-        return null;
+        return JsonData.buildSuccess();
+    }
+
+    /**
+     * 延迟消息的时间 需要比订单过期 时间长一点，这样就不存在查询的时候，用户还能支付成功
+     * <p>
+     * 查询订单是否存在，如果已经支付则正常结束
+     * 如果订单未支付，主动调用第三方支付平台查询订单状态
+     * 确认未支付，本地取消订单
+     * 如果第三方平台已经支付，主动的把订单状态改成已支付，造成该原因的情况可能是支付通道回调有问题，然后触发支付后的动作，如何触发？RPC还是？
+     */
+    @Override
+    public boolean closeProductOrder(EventMessage eventMessage) {
+        String outTradeNo = eventMessage.getBizId();
+        Long accountNo = eventMessage.getAccountNo();
+        ProductOrderDO productOrderDO = productOrderManager.findByOutTradeNoAndAccountNo(outTradeNo, accountNo);
+        if (productOrderDO == null) {
+            //订单不存在
+            log.warn("订单不存在");
+            return true;
+        }
+        if (productOrderDO.getState().equalsIgnoreCase(ProductOrderStateEnum.PAY.name())) {
+            //已经支付
+            log.info("直接确认消息，订单已经支付:{}", eventMessage);
+        }
+        //未支付，需要向第三方支付平台查询状态
+        if (productOrderDO.getState().equalsIgnoreCase(ProductOrderStateEnum.NEW.name())) {
+            //向第三方查询状态
+            PayInfoVO payInfoVO = new PayInfoVO();
+            payInfoVO.setPayType(productOrderDO.getPayType());
+            payInfoVO.setOutTradeNo(outTradeNo);
+            payInfoVO.setAccountNo(accountNo);
+            //TODO 需要向第三方支付平台查询状态
+            String payResult = "";
+            if (StringUtils.isBlank(payResult)) {
+                //如果为空，则未支付成功，本地取消订单
+                productOrderManager.updateOrderPayState(
+                        outTradeNo, accountNo, ProductOrderStateEnum.CANCEL.name(), ProductOrderStateEnum.NEW.name());
+                log.info("未支付成功，本地取消订单:{}", eventMessage);
+            } else {
+                //支付成功，主动把订单状态更新成支付
+                productOrderManager.updateOrderPayState(
+                        outTradeNo, accountNo, ProductOrderStateEnum.PAY.name(), ProductOrderStateEnum.NEW.name());
+                log.warn("支付成功，但是微信回调通知失败，需要排查问题:{}", eventMessage);
+                //触发支付成功后的逻辑， TODO
+            }
+        }
+        return true;
     }
 
     private ProductOrderDO saveProductOrder(ConfirmOrderRequest orderRequest, LoginUser loginUser, String orderOutTradeNo, ProductDO productDO) {

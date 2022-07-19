@@ -3,6 +3,7 @@ package org.example.service;
 import java.util.Map;
 import org.example.controller.request.ConfirmOrderRequest;
 import org.example.controller.request.ProductOrderPageRequest;
+import org.example.model.EventMessage;
 import org.example.util.JsonData;
 
 public interface ProductOrderService {
@@ -12,4 +13,6 @@ public interface ProductOrderService {
     String queryProductOrderState(String outTradeNo);
 
     JsonData confirmOrder(ConfirmOrderRequest orderRequest);
+
+    boolean closeProductOrder(EventMessage eventMessage);
 }
