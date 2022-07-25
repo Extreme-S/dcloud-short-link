@@ -2,10 +2,12 @@ package org.example.service.impl;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.example.component.PayFactory;
 import org.example.config.RabbitMQConfig;
 import org.example.constant.TimeConstant;
 import org.example.controller.request.ConfirmOrderRequest;
@@ -45,6 +47,9 @@ public class ProductOrderServiceImpl implements ProductOrderService {
 
     @Autowired
     private RabbitMQConfig rabbitMQConfig;
+
+    @Autowired
+    private PayFactory payFactory;
 
     @Override
     public Map<String, Object> page(ProductOrderPageRequest orderPageRequest) {
@@ -99,8 +104,15 @@ public class ProductOrderServiceImpl implements ProductOrderService {
                 .bizId(orderOutTradeNo).build();
         rabbitTemplate.convertAndSend(
                 rabbitMQConfig.getOrderEventExchange(), rabbitMQConfig.getOrderCloseDelayRoutingKey(), eventMessage);
-        //调用支付信息 TODO
-        return JsonData.buildSuccess();
+        //调用支付信息
+        String codeUrl = payFactory.pay(payInfoVO);
+        if (StringUtils.isNotBlank(codeUrl)) {
+            Map<String, String> resultMap = new HashMap<>(2);
+            resultMap.put("code_url", codeUrl);
+            resultMap.put("out_trade_no", payInfoVO.getOutTradeNo());
+            return JsonData.buildSuccess(resultMap);
+        }
+        return JsonData.buildResult(BizCodeEnum.PAY_ORDER_FAIL);
     }
 
     /**
