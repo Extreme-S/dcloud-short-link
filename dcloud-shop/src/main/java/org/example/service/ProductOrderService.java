@@ -1,6 +1,7 @@
 package org.example.service;
 
 import java.util.Map;
+
 import org.example.controller.request.ConfirmOrderRequest;
 import org.example.controller.request.ProductOrderPageRequest;
 import org.example.enums.ProductOrderPayTypeEnum;
@@ -18,4 +19,9 @@ public interface ProductOrderService {
     boolean closeProductOrder(EventMessage eventMessage);
 
     JsonData processOrderCallbackMsg(ProductOrderPayTypeEnum wechatPay, Map<String, String> paramsMap);
+
+    /**
+     * 处理 队列里面的订单相关消息
+     */
+    void handleProductOrderMessage(EventMessage message);
 }

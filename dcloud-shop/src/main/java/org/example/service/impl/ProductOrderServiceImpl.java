@@ -189,7 +189,7 @@ public class ProductOrderServiceImpl implements ProductOrderService {
                 .accountNo(accountNo)
                 .messageId(outTradeNo)
                 .content(JsonUtil.obj2Json(content))
-                .eventMessageType(EventMessageType.ORDER_PAY.name())
+                .eventMessageType(EventMessageType.PRODUCT_ORDER_PAY.name())
                 .build();
         if (payType.name().equalsIgnoreCase(ProductOrderPayTypeEnum.ALI_PAY.name())) {
             //支付宝支付 TODO
@@ -206,6 +206,30 @@ public class ProductOrderServiceImpl implements ProductOrderService {
             }
         }
         return JsonData.buildResult(BizCodeEnum.PAY_ORDER_CALLBACK_NOT_SUCCESS);
+    }
+
+    /**
+     * 处理订单相关消息
+     */
+    @Override
+    public void handleProductOrderMessage(EventMessage eventMessage) {
+        String messageType = eventMessage.getEventMessageType();
+        try {
+            if (EventMessageType.PRODUCT_ORDER_NEW.name().equalsIgnoreCase(messageType)) {
+                //关闭订单
+                this.closeProductOrder(eventMessage);
+            } else if (EventMessageType.PRODUCT_ORDER_PAY.name().equalsIgnoreCase(messageType)) {
+                //订单已经支付，更新订单状态
+                String outTradeNo = eventMessage.getBizId();
+                Long accountNo = eventMessage.getAccountNo();
+                int rows = productOrderManager.updateOrderPayState(
+                        outTradeNo, accountNo, ProductOrderStateEnum.PAY.name(), ProductOrderStateEnum.NEW.name());
+                log.info("订单更新成功:rows={},eventMessage={}", rows, eventMessage);
+            }
+        } catch (Exception e) {
+            log.error("订单消费者消费失败:{}", eventMessage);
+            throw new BizException(BizCodeEnum.MQ_CONSUME_EXCEPTION);
+        }
     }
 
     private ProductOrderDO saveProductOrder(ConfirmOrderRequest orderRequest, LoginUser loginUser, String orderOutTradeNo, ProductDO productDO) {

@@ -157,7 +157,7 @@ public class WechatPayTest {
      */
     @Test
     public void testNativeRefundOrder() throws IOException {
-        String outTradeNo = "HkPfPY0q3GwuYYUou0wfUnX34iRNYxXX";
+        String outTradeNo = "oJQCNuD5fFhzvwXFbaaD5LQQg2IUbiUK";
         String refundNo = CommonUtil.getStringNumRandom(32);
         // 请求body参数
         JSONObject refundObj = new JSONObject();
@@ -205,7 +205,7 @@ public class WechatPayTest {
      */
     @Test
     public void testNativeRefundQuery() throws IOException {
-        String refundNo = "leZlKkz6jTj7I4Sd2F04HdHLPRhXg0RK";
+        String refundNo = "oJQCNuD5fFhzvwXFbaaD5LQQg2IUbiUK";
         String url = String.format(WechatPayApi.NATIVE_REFUND_QUERY, refundNo);
         HttpGet httpGet = new HttpGet(url);
         httpGet.setHeader("Accept", "application/json");
