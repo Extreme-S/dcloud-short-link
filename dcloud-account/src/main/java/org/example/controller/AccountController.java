@@ -33,8 +33,8 @@ public class AccountController {
     public JsonData uploadUserImg(@RequestPart("file") MultipartFile file) {
         String result = fileService.uploadUserImg(file);
         return result != null
-            ? JsonData.buildSuccess(result)
-            : JsonData.buildResult(BizCodeEnum.FILE_UPLOAD_USER_IMG_FAIL);
+                ? JsonData.buildSuccess(result)
+                : JsonData.buildResult(BizCodeEnum.FILE_UPLOAD_USER_IMG_FAIL);
     }
 
     /**

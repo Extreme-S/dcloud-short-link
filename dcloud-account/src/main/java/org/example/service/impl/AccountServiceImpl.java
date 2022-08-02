@@ -1,16 +1,20 @@
 package org.example.service.impl;
 
 import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.apache.commons.lang3.StringUtils;
+import org.example.config.RabbitMQConfig;
 import org.example.controller.request.AccountLoginRequest;
 import org.example.controller.request.AccountRegisterRequest;
 import org.example.enums.AuthTypeEnum;
 import org.example.enums.BizCodeEnum;
+import org.example.enums.EventMessageType;
 import org.example.enums.SendCodeEnum;
 import org.example.manager.AccountManager;
 import org.example.model.AccountDO;
+import org.example.model.EventMessage;
 import org.example.model.LoginUser;
 import org.example.service.AccountService;
 import org.example.service.NotifyService;
@@ -18,6 +22,7 @@ import org.example.util.CommonUtil;
 import org.example.util.IDUtil;
 import org.example.util.JWTUtil;
 import org.example.util.JsonData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +38,18 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private AccountManager accountManager;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+
+    @Autowired
+    private RabbitMQConfig rabbitMQConfig;
+
+    /**
+     * 免费流量包商品id
+     */
+    private static final Long FREE_TRAFFIC_PRODUCT_ID = 1L;
+
 
     /**
      * 手机验证码验证
@@ -43,28 +60,23 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     public JsonData register(AccountRegisterRequest registerRequest) {
-        if (StringUtils.isEmpty(registerRequest.getPhone())) {//注册手机号不能为空
-            return JsonData.buildResult(BizCodeEnum.CODE_TO_ERROR);
+        if (StringUtils.isEmpty(registerRequest.getPhone())) {
+            return JsonData.buildResult(BizCodeEnum.CODE_TO_ERROR);    //注册手机号不能为空
         }
-        boolean checkCode = notifyService.checkCode(SendCodeEnum.USER_REGISTER, registerRequest.getPhone(),
-            registerRequest.getCode());
-        if (!checkCode) {
-            return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
-        }
-
+        boolean checkCode = notifyService.checkCode(
+                SendCodeEnum.USER_REGISTER, registerRequest.getPhone(), registerRequest.getCode());
+        if (!checkCode) return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
         //加密处理密码，生成accountDO对象插入数据库
         AccountDO accountDO = new AccountDO();
         BeanUtils.copyProperties(registerRequest, accountDO);
-        accountDO.setAccountNo(Long.valueOf(IDUtil.geneSnowFlakeID().toString()));//账号唯一编号
-        accountDO.setAuth(AuthTypeEnum.DEFAULT.name());//用户认证级别
-        accountDO.setSecret("$1$" + CommonUtil.getStringNumRandom(8));//密钥
-        String cryptPwd = Md5Crypt.md5Crypt(registerRequest.getPwd().getBytes(), accountDO.getSecret());//盐
-        accountDO.setPwd(cryptPwd);
+        accountDO.setAccountNo(Long.valueOf(IDUtil.geneSnowFlakeID().toString()));                                      //账号唯一编号
+        accountDO.setAuth(AuthTypeEnum.DEFAULT.name());                                                                 //用户认证级别
+        accountDO.setSecret("$1$" + CommonUtil.getStringNumRandom(8));                                           //密钥
+        accountDO.setPwd(Md5Crypt.md5Crypt(registerRequest.getPwd().getBytes(), accountDO.getSecret()));                //pwd，加密加盐处理
         int rows = accountManager.insert(accountDO);
         log.info("rows:{},注册成功:{}", rows, accountDO);
 
-        //用户注册成功，发放福利
-        userRegisterInitTask(accountDO);
+        userRegisterInitTask(accountDO);        //用户注册成功，发放福利
         return JsonData.buildSuccess();
     }
 
@@ -92,10 +104,26 @@ public class AccountServiceImpl implements AccountService {
 
     /**
      * 用户注册成功，发放福利
-     *
-     * @param accountDO
      */
     private void userRegisterInitTask(AccountDO accountDO) {
-
+        EventMessage eventMessage = EventMessage.builder()
+                .messageId(IDUtil.geneSnowFlakeID().toString())
+                .accountNo(accountDO.getAccountNo())
+                .eventMessageType(EventMessageType.TRAFFIC_FREE_INIT.name())
+                .bizId(FREE_TRAFFIC_PRODUCT_ID.toString())
+                .build();
+        //发送发放流量包消息
+        rabbitTemplate.convertAndSend(
+                rabbitMQConfig.getTrafficEventExchange(), rabbitMQConfig.getTrafficFreeInitRoutingKey(), eventMessage);
     }
 }
+
+
+
+
+
+
+
+
+
+
