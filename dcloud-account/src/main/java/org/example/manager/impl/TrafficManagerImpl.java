@@ -58,4 +58,11 @@ public class TrafficManagerImpl implements TrafficManager {
                 .eq("id", currentTrafficId)
                 .set("day_used", dayUsedTimes));
     }
+
+    @Override
+    public boolean deleteExpireTraffic() {
+        int rows = trafficMapper.delete(new QueryWrapper<TrafficDO>().le("expired_date", new Date()));
+        log.info("删除过期流量包行数：rows={}", rows);
+        return true;
+    }
 }

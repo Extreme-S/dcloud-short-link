@@ -21,7 +21,7 @@ public interface TrafficManager {
     /**
      * 查找详情
      */
-    TrafficDO findByIdAndAccountNo(Long trafficId,Long accountNo);
+    TrafficDO findByIdAndAccountNo(Long trafficId, Long accountNo);
 
 
     /**
@@ -29,5 +29,9 @@ public interface TrafficManager {
      */
     int addDayUsedTimes(long currentTrafficId, Long accountNo, int dayUsedTimes);
 
+    /**
+     * 删除过期流量包
+     */
+    boolean deleteExpireTraffic();
 
 }
