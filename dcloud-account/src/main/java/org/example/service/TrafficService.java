@@ -1,7 +1,9 @@
 package org.example.service;
 
 import org.example.controller.request.TrafficPageRequest;
+import org.example.controller.request.UseTrafficRequest;
 import org.example.model.EventMessage;
+import org.example.util.JsonData;
 import org.example.vo.TrafficVO;
 
 import java.util.Map;
@@ -19,4 +21,14 @@ public interface TrafficService {
      */
     boolean deleteExpireTraffic();
 
+    /**
+     * 扣减流量包
+     * - 查询用户全部可用流量包
+     * - 遍历流量包，根据日期判断是否需要更新
+     * - - 当日未更新的流量包后加入【待更新集合】中  ->更新流量包
+     * - - 当日已更新的判断是否超过 day_limit      ->增加day_used
+     * - 更新今日用户【待更新集合】中流量包相关数据
+     * - 扣减使用的某个流量包使用次数
+     */
+    JsonData reduce(UseTrafficRequest useTrafficRequest);
 }

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TrafficJobHandler {
 
-
     @Autowired
     private TrafficService trafficService;
 
@@ -26,11 +25,11 @@ public class TrafficJobHandler {
     }
 
     private void init() {
-        log.info("小滴课堂 MyJobHandler init >>>>>");
+        log.info("trafficExpiredHandler init >>>>>");
     }
 
     private void destroy() {
-        log.info("小滴课堂 MyJobHandler destroy >>>>>");
+        log.info("trafficExpiredHandler destroy >>>>>");
     }
 
 }
