@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -7,13 +8,14 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.example.component.ShortLinkComponent;
 import org.example.config.RabbitMQConfig;
-import org.example.controller.request.ShortLinkAddRequest;
-import org.example.controller.request.ShortLinkDelRequest;
-import org.example.controller.request.ShortLinkPageRequest;
-import org.example.controller.request.ShortLinkUpdateRequest;
+import org.example.constant.LuaScript;
+import org.example.constant.RedisKey;
+import org.example.controller.request.*;
+import org.example.enums.BizCodeEnum;
 import org.example.enums.DomainTypeEnum;
 import org.example.enums.EventMessageType;
 import org.example.enums.ShortLinkStateEnum;
+import org.example.feign.TrafficFeignService;
 import org.example.interceptor.LoginInterceptor;
 import org.example.manager.DomainManager;
 import org.example.manager.GroupCodeMappingManager;
@@ -66,7 +68,9 @@ public class ShortLinkServiceImpl implements ShortLinkService {
 
     @Autowired
     private GroupCodeMappingManager groupCodeMappingManager;
-    private EventMessage eventMessage;
+
+    @Autowired
+    private TrafficFeignService trafficFeignService;
 
 
     @Override
@@ -83,17 +87,30 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     @Override
     public JsonData createShortLink(ShortLinkAddRequest request) {
         Long accountNo = LoginInterceptor.threadLocal.get().getAccountNo();
-        //为原始URL拼接前缀，使得一个原始URL可以对应多个短链码
-        String newOriginalUrl = CommonUtil.addUrlPrefix(request.getOriginalUrl());
-        request.setOriginalUrl(newOriginalUrl);
-        EventMessage eventMessage = EventMessage.builder()
-                .messageId(IDUtil.geneSnowFlakeID().toString())
-                .eventMessageType(EventMessageType.SHORT_LINK_ADD.name())
-                .accountNo(accountNo)
-                .content(JsonUtil.obj2Json(request)).build();
-        rabbitTemplate.convertAndSend(rabbitMQConfig.getShortLinkEventExchange(),
-                rabbitMQConfig.getShortLinkAddRoutingKey(), eventMessage);
-        return JsonData.buildSuccess();
+        //需要预先检查下是否有足够多的可以进行创建
+        String cacheKey = String.format(RedisKey.DAY_TOTAL_TRAFFIC, accountNo);
+        // 检查key是否存在，然后递减，是否大于等于0，使用lua脚本
+        // 如果key不存在，则未使用过，lua返回值是0； 新增流量包的时候，不用重新计算次数，直接删除key,消费的时候回计算更新
+//        String script = "if redis.call('get',KEYS[1]) then return redis.call('decr',KEYS[1]) else return 0 end";
+        Long leftTimes = redisTemplate.execute(
+                new DefaultRedisScript<>(LuaScript.USER_DAY_TOTAL_TRAFFIC_DECR, Long.class), List.of(cacheKey), "");
+        log.info("今日流量包剩余次数:{}", leftTimes);
+        if (leftTimes >= 0) {
+            String newOriginalUrl = CommonUtil.addUrlPrefix(request.getOriginalUrl());
+            request.setOriginalUrl(newOriginalUrl);
+            EventMessage eventMessage = EventMessage.builder().accountNo(accountNo)
+                    .content(JsonUtil.obj2Json(request))
+                    .messageId(IDUtil.geneSnowFlakeID().toString())
+                    .eventMessageType(EventMessageType.SHORT_LINK_ADD.name())
+                    .build();
+            rabbitTemplate.convertAndSend(rabbitMQConfig.getShortLinkEventExchange(), rabbitMQConfig.getShortLinkAddRoutingKey(), eventMessage);
+            return JsonData.buildSuccess();
+        } else {
+            //流量包不足
+            return JsonData.buildResult(BizCodeEnum.TRAFFIC_REDUCE_FAIL);
+        }
+
+
     }
 
     /**
@@ -130,21 +147,21 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         Long result = redisTemplate.execute(
                 new DefaultRedisScript<>(script, Long.class), List.of(shortLinkCode), accountNo, 100);
         boolean duplicateCodeFlag = false;
-
-        //加锁成功
         if (result > 0) {
+            //如果加锁成功
             if (EventMessageType.SHORT_LINK_ADD_LINK.name().equalsIgnoreCase(messageType)) {
-                // C端添加短链码信息
-                ShortLinkDO shortLinCodeDOInDB = shortLinkManager.findByShortLinkCode(shortLinkCode);
+                // C端添加短链码
+                ShortLinkDO shortLinCodeDOInDB = shortLinkManager.findByShortLinkCode(shortLinkCode);//判断短链码是否被占用
                 if (shortLinCodeDOInDB == null) {
-                    ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                            .accountNo(accountNo).code(shortLinkCode)
-                            .title(addRequest.getTitle()).originalUrl(addRequest.getOriginalUrl())
-                            .domain(domainDO.getValue()).groupId(linkGroupDO.getId())
-                            .expired(addRequest.getExpired()).sign(originalUrlDigest)
-                            .state(ShortLinkStateEnum.ACTIVE.name()).del(0).build();
-                    shortLinkManager.addShortLink(shortLinkDO);
-                    return true;
+                    boolean reduceFlag = reduceTraffic(eventMessage, shortLinkCode);
+                    if (reduceFlag) {
+                        ShortLinkDO shortLinkDO = ShortLinkDO.builder().accountNo(accountNo).code(shortLinkCode)
+                                .title(addRequest.getTitle()).originalUrl(addRequest.getOriginalUrl())
+                                .domain(domainDO.getValue()).groupId(linkGroupDO.getId()).expired(addRequest.getExpired())
+                                .sign(originalUrlDigest).state(ShortLinkStateEnum.ACTIVE.name()).del(0).build();
+                        shortLinkManager.addShortLink(shortLinkDO);
+                        return true;
+                    }
                 } else {
                     log.error("C端短链码重复:{}", eventMessage);
                     duplicateCodeFlag = true;
@@ -168,7 +185,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
                 }
             }
         } else {
-            //加锁失败，自旋100毫秒，再调用； 失败的可能是短链码已经被占用，需要重新生成
+            //加锁失败，自旋100毫秒，再调用；失败的可能是短链码已经被占用，需要重新生成
             log.error("加锁失败:{}", eventMessage);
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
@@ -184,6 +201,19 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             handleAddShortLink(eventMessage);
         }
         return false;
+    }
+
+    /**
+     * 扣减流量包
+     */
+    private boolean reduceTraffic(EventMessage eventMessage, String shortLinkCode) {
+        UseTrafficRequest request = new UseTrafficRequest(eventMessage.getAccountNo(), shortLinkCode);
+        JsonData jsonData = trafficFeignService.useTraffic(request);
+        if (jsonData.getCode() != 0) {
+            log.error("流量包不足，扣减失败:{}", eventMessage);
+            return false;
+        }
+        return true;
     }
 
     @Override

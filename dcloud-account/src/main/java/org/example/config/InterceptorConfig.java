@@ -14,11 +14,13 @@ public class InterceptorConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
 
         registry.addInterceptor(new LoginInterceptor())
-            //添加拦截的路径
-            .addPathPatterns("/api/account/*/**", "/api/traffic/*/**")
+                //添加拦截的路径
+                .addPathPatterns(
+                        "/api/account/*/**", "/api/traffic/*/**")
 
-            //排除不拦截
-            .excludePathPatterns("/api/account/*/register", "/api/account/*/upload", "/api/account/*/login",
-                "/api/notify/v1/captcha", "/api/notify/*/send_code");
+                //排除不拦截
+                .excludePathPatterns(
+                        "/api/account/*/register", "/api/account/*/upload", "/api/account/*/login",
+                        "/api/notify/v1/captcha", "/api/notify/*/send_code", "/api/traffic/*/reduce");
     }
 }

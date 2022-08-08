@@ -3,6 +3,7 @@ package org.example.service.impl;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.extern.slf4j.Slf4j;
+import org.example.constant.RedisKey;
 import org.example.controller.request.TrafficPageRequest;
 import org.example.controller.request.UseTrafficRequest;
 import org.example.enums.BizCodeEnum;
@@ -23,6 +24,7 @@ import org.example.vo.TrafficVO;
 import org.example.vo.UseTrafficVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,7 @@ import org.springframework.util.CollectionUtils;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -40,6 +43,9 @@ public class TrafficServiceImpl implements TrafficService {
 
     @Autowired
     private TrafficManager trafficManager;
+
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
 
     @Autowired
     private ProductFeignService productFeignService;
@@ -69,6 +75,9 @@ public class TrafficServiceImpl implements TrafficService {
                     .build();
             int rows = trafficManager.add(trafficDO);
             log.info("消费消息新增流量包:rows={},trafficDO={}", rows, trafficDO);
+
+            //新增流量包，删除Redis中该用户流量包的 天剩余使用次数
+            redisTemplate.delete(String.format(RedisKey.DAY_TOTAL_TRAFFIC, accountNo));
         } else if (EventMessageType.TRAFFIC_FREE_INIT.name().equalsIgnoreCase(messageType)) {
             //发放免费流量包
             long productId = Long.parseLong(eventMessage.getBizId());
@@ -76,17 +85,9 @@ public class TrafficServiceImpl implements TrafficService {
             ProductVO productVO = jsonData.getData(new TypeReference<ProductVO>() {
             });
             //构建流量包对象
-            TrafficDO trafficDO = TrafficDO.builder()
-                    .accountNo(accountNo)
-                    .dayLimit(productVO.getDayTimes())
-                    .dayUsed(0)
-                    .totalLimit(productVO.getTotalTimes())
-                    .pluginType(productVO.getPluginType())
-                    .level(productVO.getLevel())
-                    .productId(productVO.getId())
-                    .outTradeNo("free_init")
-                    .expiredDate(new Date())
-                    .build();
+            TrafficDO trafficDO = TrafficDO.builder().accountNo(accountNo).dayLimit(productVO.getDayTimes()).dayUsed(0)
+                    .totalLimit(productVO.getTotalTimes()).pluginType(productVO.getPluginType()).level(productVO.getLevel())
+                    .productId(productVO.getId()).outTradeNo("free_init").expiredDate(new Date()).build();
             trafficManager.add(trafficDO);
         }
     }
@@ -130,6 +131,13 @@ public class TrafficServiceImpl implements TrafficService {
         //先更新，再扣减当前使用的流量包
         int rows = trafficManager.addDayUsedTimes(accountNo, useTrafficVO.getCurrentTrafficDO().getId(), 1);
         if (rows != 1) throw new BizException(BizCodeEnum.TRAFFIC_REDUCE_FAIL); //扣减流量包失败，抛出异常
+
+        //向redis中设置总流量包次数，短链服务那边递减即可；如果有新增流量包，则删除这个key
+        long leftSeconds = TimeUtil.getRemainSecondsOneDay(new Date());
+        String totalTrafficTimesKey = String.format(RedisKey.DAY_TOTAL_TRAFFIC, accountNo);
+
+        redisTemplate.opsForValue().set(totalTrafficTimesKey,
+                useTrafficVO.getDayTotalLeftTimes() - 1, leftSeconds, TimeUnit.SECONDS);
         return JsonData.buildSuccess();
     }
 
