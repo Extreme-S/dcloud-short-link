@@ -185,6 +185,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!--valid校验依赖-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>

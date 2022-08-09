@@ -80,8 +80,8 @@ public class TrafficManagerImpl implements TrafficManager {
      * 恢复某个流量包使用次数，回滚流量包
      */
     @Override
-    public int releaseUsedTimes(Long accountNo, Long trafficId, Integer useTimes) {
-        return trafficMapper.releaseUsedTimes(accountNo, trafficId, useTimes);
+    public int releaseUsedTimes(Long accountNo, Long trafficId, Integer useTimes, String useDateStr) {
+        return trafficMapper.releaseUsedTimes(accountNo, trafficId, useTimes, useDateStr);
     }
 
     @Override

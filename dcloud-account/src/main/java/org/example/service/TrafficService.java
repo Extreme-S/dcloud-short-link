@@ -10,6 +10,14 @@ import java.util.Map;
 
 public interface TrafficService {
 
+    /**
+     * TRAFFIC_USED
+     * - 流量包使用，检查是否成功使用
+     *             //检查task是否存在
+     *             //检查短链是否成功
+     *             //如果不成功，则恢复流量包
+     *             //删除task (也可以更新task状态，定时删除就行)
+     */
     void handleTrafficMessage(EventMessage eventMessage);
 
     Map<String, Object> pageAvailable(TrafficPageRequest request);

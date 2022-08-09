@@ -2,15 +2,18 @@ package org.example.model;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
+
 import java.util.Date;
+
 import com.baomidou.mybatisplus.annotation.TableId;
+
 import java.io.Serializable;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import lombok.*;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author 不爱吃鱼的猫、
@@ -19,11 +22,14 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("traffic_task")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class TrafficTaskDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-      @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     private Long accountNo;
@@ -40,7 +46,7 @@ public class TrafficTaskDO implements Serializable {
     /**
      * 唯一标识
      */
-    private String messageId;
+    private String bizId;
 
     private Date gmtCreate;
 

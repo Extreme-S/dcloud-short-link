@@ -20,7 +20,7 @@ public class CustomExceptionHandler {
             return JsonData.buildCodeAndMsg(bizException.getCode(), bizException.getMsg());
         } else {
             log.error("[系统异常]{}", e);
-            return JsonData.buildError("系统异常");
+            return JsonData.buildError("系统异常:" + e.getMessage());
         }
 
     }

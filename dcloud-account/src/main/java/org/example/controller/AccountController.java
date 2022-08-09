@@ -8,12 +8,15 @@ import org.example.service.AccountService;
 import org.example.service.FileService;
 import org.example.util.JsonData;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/account/v1")
@@ -41,7 +44,7 @@ public class AccountController {
      * 用户注册
      */
     @PostMapping("register")
-    public JsonData register(@RequestBody AccountRegisterRequest registerRequest) {
+    public JsonData register(@RequestBody @Validated AccountRegisterRequest registerRequest) {
         return accountService.register(registerRequest);
     }
 

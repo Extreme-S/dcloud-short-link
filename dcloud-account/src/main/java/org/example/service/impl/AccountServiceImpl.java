@@ -53,19 +53,16 @@ public class AccountServiceImpl implements AccountService {
 
     /**
      * 手机验证码验证
-     * 密码加密（TODO）
+     * 密码加密
      * 账号唯一性检查(TODO)
      * 插入数据库
-     * 新注册用户福利发放(TODO)
+     * 新注册用户福利发放
      */
     @Override
     public JsonData register(AccountRegisterRequest registerRequest) {
-        if (StringUtils.isEmpty(registerRequest.getPhone())) {
-            return JsonData.buildResult(BizCodeEnum.CODE_TO_ERROR);    //注册手机号不能为空
-        }
-        boolean checkCode = notifyService.checkCode(
+        boolean checkFlag = notifyService.checkCode(    //判断手机验证码是否正确
                 SendCodeEnum.USER_REGISTER, registerRequest.getPhone(), registerRequest.getCode());
-        if (!checkCode) return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
+        if (!checkFlag) return JsonData.buildResult(BizCodeEnum.CODE_ERROR);
         //加密处理密码，生成accountDO对象插入数据库
         AccountDO accountDO = new AccountDO();
         BeanUtils.copyProperties(registerRequest, accountDO);
@@ -76,7 +73,7 @@ public class AccountServiceImpl implements AccountService {
         int rows = accountManager.insert(accountDO);
         log.info("rows:{},注册成功:{}", rows, accountDO);
 
-        userRegisterInitTask(accountDO);        //用户注册成功，发放福利
+        userRegisterInitTask(accountDO);//用户注册成功，发放福利
         return JsonData.buildSuccess();
     }
 

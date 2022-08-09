@@ -40,6 +40,7 @@
         SET day_used = day_used - #{usedTimes}
         WHERE id = #{trafficId} AND account_no = #{accountNo}
             AND (day_used - #{usedTimes}) >= 0
+            AND date_format(gmt_modified,'%Y-%m-%d') = #{useDateStr}
         LIMIT 1
     </update>
 

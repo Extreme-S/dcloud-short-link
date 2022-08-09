@@ -2,17 +2,19 @@ package org.example.controller;
 
 
 import java.util.Map;
+
 import org.example.controller.request.ShortLinkAddRequest;
 import org.example.controller.request.ShortLinkDelRequest;
 import org.example.controller.request.ShortLinkPageRequest;
 import org.example.controller.request.ShortLinkUpdateRequest;
 import org.example.service.ShortLinkService;
 import org.example.util.JsonData;
+import org.example.vo.ShortLinkVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/link/v1")
@@ -20,6 +22,19 @@ public class ShortLinkController {
 
     @Autowired
     private ShortLinkService shortLinkService;
+
+    @Value("${rpc.token}")
+    private String rpcToken;
+
+    @GetMapping("check")
+    public JsonData check(@RequestParam("shortLinkCode") String shortLinkCode, HttpServletRequest request) {
+        String token = request.getHeader("rpc-token");
+        if (rpcToken.equalsIgnoreCase(token)) {
+            ShortLinkVO shortLinkVO = shortLinkService.parseShortLinkCode(shortLinkCode);
+            return shortLinkVO == null ? JsonData.buildError("短链不存在") : JsonData.buildSuccess();
+        }
+        return JsonData.buildError("非法访问");
+    }
 
     /**
      * 新增短链
