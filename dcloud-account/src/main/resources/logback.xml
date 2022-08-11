@@ -16,8 +16,7 @@
             <fileNamePattern>${log.path}.%d{yyyy-MM-dd}.zip</fileNamePattern>
         </rollingPolicy>
         <encoder>
-            <pattern>%date %level [%thread] %logger{36} [%file : %line] %msg%n
-            </pattern>
+            <pattern>%date %level [%thread] %logger{36} [%file : %line] %msg%n</pattern>
         </encoder>
     </appender>
 

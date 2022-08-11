@@ -2,8 +2,10 @@ package org.example.controller;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import lombok.extern.slf4j.Slf4j;
 import org.example.enums.ShortLinkStateEnum;
+import org.example.service.LogService;
 import org.example.service.ShortLinkService;
 import org.example.util.CommonUtil;
 import org.example.vo.ShortLinkVO;
@@ -18,9 +20,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 @Slf4j
 public class LinkApiController {
 
-
     @Autowired
     private ShortLinkService shortLinkService;
+
+    @Autowired
+    private LogService logService;
 
 
     /**
@@ -32,15 +36,16 @@ public class LinkApiController {
      * 所以选择302虽然会增加服务器压力，但是有很多数据可以获取进行分析
      */
     @GetMapping(path = "/{shortLinkCode}")
-    public void dispatch(@PathVariable(name = "shortLinkCode") String shortLinkCode, HttpServletRequest request,
-        HttpServletResponse response) {
+    public void dispatch(@PathVariable(name = "shortLinkCode") String shortLinkCode, HttpServletRequest request, HttpServletResponse response) {
         try {
             log.info("短链码:{}", shortLinkCode);
             //判断短链码是否合规
             if (isLetterDigit(shortLinkCode)) {
                 ShortLinkVO shortLinkVO = shortLinkService.parseShortLinkCode(shortLinkCode);
-                //判断是否过期和可用
-                if (isVisitable(shortLinkVO)) {
+                if (shortLinkVO != null) {
+                    logService.recordShortLinkLog(request, shortLinkCode, shortLinkVO.getAccountNo());
+                }
+                if (isVisitable(shortLinkVO)) {//判断是否过期和可用
                     // 移除url前缀，HTTP 302跳转
                     String originalUrl = CommonUtil.removeUrlPrefix(shortLinkVO.getOriginalUrl());
                     response.setHeader("Location", originalUrl);

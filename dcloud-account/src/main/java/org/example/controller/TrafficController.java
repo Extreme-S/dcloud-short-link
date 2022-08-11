@@ -23,7 +23,6 @@ public class TrafficController {
     @Value("${rpc.token}")
     private String rpcToken;
 
-
     /**
      * 使用流量包API
      */
