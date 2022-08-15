@@ -133,8 +133,21 @@
             <artifactId>flink-connector-jdbc_${scala.version}</artifactId>
             <version>${flink.version}</version>
         </dependency>
-    </dependencies>
 
+        <!-- useragent提取工具 -->
+        <dependency>
+            <groupId>eu.bitwalker</groupId>
+            <artifactId>UserAgentUtils</artifactId>
+            <version>1.21</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+        </dependency>
+    </dependencies>
 
 
     <!-- 指定仓库位置，先从aliyun找，找不到再从apache仓库找 -->
@@ -148,7 +161,6 @@
             <url>https://repository.apache.org/content/repositories/snapshots/</url>
         </repository>
     </repositories>
-
 
 
     <build>
