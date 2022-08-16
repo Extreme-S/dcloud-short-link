@@ -36,6 +36,11 @@ public class AsyncLocationRequestFunction extends RichAsyncFunction<ShortLinkWid
     private CloseableHttpAsyncClient httpAsyncClient;
 
     @Override
+    public void timeout(ShortLinkWideDO input, ResultFuture<String> resultFuture) throws Exception {
+        resultFuture.complete(null);
+    }
+
+    @Override
     public void open(Configuration parameters) throws Exception {
         this.httpAsyncClient = createAsyncHttpClient();
     }

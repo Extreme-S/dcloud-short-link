@@ -45,12 +45,13 @@ public class DwdShortLinkLogApp {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
+        //获取数据流
         DataStream<String> ds = env.socketTextStream("127.0.0.1", 8888);
-
 //        FlinkKafkaConsumer<String> kafkaConsumer = KafkaUtil.getKafkaConsumer(SOURCE_TOPIC, GROUP_ID);
 //        DataStreamSource<String> ds = env.addSource(kafkaConsumer);
-
         ds.print();
+
+
         //数据补齐
         SingleOutputStreamOperator<JSONObject> jsonDS = ds.flatMap(new FlatMapFunction<String, JSONObject>() {
             @Override
@@ -113,7 +114,7 @@ public class DwdShortLinkLogApp {
             map.put("userAgent", jsonObject.getJSONObject("data").getString("user-agent"));
             return DeviceUtil.geneWebUniqueDeviceId(map);
         } catch (Exception e) {
-            log.error("生成唯一deviceid异常:{}", jsonObject);
+            log.error("生成唯一deviceId异常:{}", jsonObject);
             return null;
         }
     }
