@@ -1,14 +1,17 @@
 package org.example.dwm;
 
+import org.apache.flink.streaming.api.datastream.AsyncDataStream;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+import org.example.func.AsyncLocationRequestFunction;
 import org.example.func.DeviceMapFunction;
-import org.example.func.LocationMapFunction;
 import org.example.model.ShortLinkWideDO;
 import org.example.util.KafkaUtil;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+
+import java.util.concurrent.TimeUnit;
 
 
 public class DwmShortLinWideApp {
@@ -44,7 +47,9 @@ public class DwmShortLinWideApp {
         deviceWideDS.print("设备信息宽表补齐");
 
         //3、补齐地理位置信息
-        SingleOutputStreamOperator<String> shortLinkWideDS = deviceWideDS.map(new LocationMapFunction());
+//        SingleOutputStreamOperator<String> shortLinkWideDS = deviceWideDS.map(new LocationMapFunction());
+        SingleOutputStreamOperator<String> shortLinkWideDS = AsyncDataStream.unorderedWait(
+                deviceWideDS, new AsyncLocationRequestFunction(), 1000, TimeUnit.MILLISECONDS, 200);
         shortLinkWideDS.print("地理位置信息宽表补齐");
 
         //4、将sink写到dwm层，kafka存储

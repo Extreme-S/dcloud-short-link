@@ -56,11 +56,8 @@ public class DwdShortLinkLogApp {
             @Override
             public void flatMap(String value, Collector<JSONObject> out) throws Exception {
                 JSONObject jsonObject = JSON.parseObject(value);
-                //生成设备唯一id
-                String udid = getDeviceId(jsonObject);
-                jsonObject.put("udid", udid);
-                String referer = getReferer(jsonObject);
-                jsonObject.put("referer", referer);
+                jsonObject.put("udid", getDeviceId(jsonObject));    //生成设备唯一id
+                jsonObject.put("referer", getReferer(jsonObject));
                 out.collect(jsonObject);
             }
         });
@@ -72,17 +69,15 @@ public class DwdShortLinkLogApp {
                 return value.getString("udid");
             }
         });
+
         //识别 richMap open函数，做状态存储的初始化
         SingleOutputStreamOperator<String> jsonDSWithVisitorState = keyedStream.map(new VistorMapFunction());
         jsonDSWithVisitorState.print("ods新老访客");
 
         //存储到dwd
         FlinkKafkaProducer<String> kafkaProducer = KafkaUtil.getKafkaProducer(SINK_TOPIC);
-
         jsonDSWithVisitorState.addSink(kafkaProducer);
-
         env.execute();
-
     }
 
 
