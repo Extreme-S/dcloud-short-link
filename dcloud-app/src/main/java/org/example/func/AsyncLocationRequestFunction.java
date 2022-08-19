@@ -37,7 +37,8 @@ public class AsyncLocationRequestFunction extends RichAsyncFunction<ShortLinkWid
 
     @Override
     public void timeout(ShortLinkWideDO input, ResultFuture<String> resultFuture) throws Exception {
-        resultFuture.complete(null);
+        // null 与 Collections.singleton(null)的区别？
+        resultFuture.complete(Collections.singleton(null));
     }
 
     @Override
@@ -76,7 +77,9 @@ public class AsyncLocationRequestFunction extends RichAsyncFunction<ShortLinkWid
                 } catch (InterruptedException | ExecutionException | IOException e) {
                     log.error("ip解析错误,value={},msg={}", shortLinkWideDO, e.getMessage());
                 }
-                return null;
+                shortLinkWideDO.setProvince("-");
+                shortLinkWideDO.setCity("-");
+                return shortLinkWideDO;
             }
         });
 

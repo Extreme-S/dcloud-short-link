@@ -11,8 +11,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 @Service
@@ -25,14 +24,39 @@ public class LogServiceImpl implements LogService {
     @Autowired
     private KafkaTemplate kafkaTemplate;
 
+    /**
+     * ====================用于测试====================
+     */
+    private static List<String> ipList = new ArrayList<>();
+
+    static {
+        ipList.add("14.197.9.110");         //深圳
+        ipList.add("113.68.152.139");       //广州
+    }
+
+    private static List<String> refererList = new ArrayList<>();
+
+    static {
+        refererList.add("https://taobao.com");
+        refererList.add("https://douyin.com");
+    }
+
+    private Random random = new Random();
+
 
     @Override
     public void recordShortLinkLog(HttpServletRequest request, String shortLinkCode, Long accountNo) {
-        String ip = CommonUtil.getIpAddr(request);//ip、浏览器信息
+
+//        String ip = CommonUtil.getIpAddr(request);//ip、浏览器信息
+        String ip = ipList.get(random.nextInt(ipList.size()));
+
         Map<String, String> headerMap = CommonUtil.getAllRequestHeader(request);//全部请求头
         Map<String, String> availableMap = new HashMap<>();
         availableMap.put("user-agent", headerMap.get("user-agent"));
-        availableMap.put("referer", headerMap.get("referer"));
+
+//        availableMap.put("referer", headerMap.get("referer"));
+        availableMap.put("referer",refererList.get(random.nextInt(refererList.size())));
+
         availableMap.put("accountNo", accountNo.toString());
 
         LogRecord logRecord = LogRecord.builder()
