@@ -124,11 +124,14 @@
 
     <!--查询设备信息分布情况-->
     <select id="queryDeviceInfo" resultMap="BaseResultMap">
-
         <if test=" field=='os'">
-            select os,sum(pv) pv_count from visit_stats where account_no=#{accountNo} and code=#{code} and
-            toYYYYMMDD(start_time) BETWEEN #{startTime} and #{endTime}
-            group by os order by pv_count
+            SELECT os,sum(pv) pv_count
+            FROM visit_stats
+            WHERE account_no=#{accountNo}
+              AND code=#{code}
+              AND toYYYYMMDD(start_time) BETWEEN #{startTime} AND #{endTime}
+            GROUP BY os
+            ORDER BY pv_count
         </if>
 
         <if test=" field=='browser'">
@@ -142,7 +145,6 @@
             toYYYYMMDD(start_time) BETWEEN #{startTime} and #{endTime}
             group by device_type order by pv_count
         </if>
-
     </select>
 
 
