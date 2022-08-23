@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
@@ -23,31 +23,27 @@
         <java.version>11</java.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-
         <spring.boot.version>2.5.5</spring.boot.version>
+
         <spring.cloud.version>2020.0.4</spring.cloud.version>
         <alibaba.cloud.version>2021.1</alibaba.cloud.version>
-
         <mybatisplus.boot.starter.version>3.4.0</mybatisplus.boot.starter.version>
         <lombok.version>1.18.16</lombok.version>
         <commons.lang3.version>3.9</commons.lang3.version>
         <commons.codec.version>1.15</commons.codec.version>
-
         <xxl-job.version>2.2.0</xxl-job.version>
-
         <aliyun.oss.version>3.10.2</aliyun.oss.version>
-
         <captcha.version>1.1.0</captcha.version>
-
-        <docker.image.prefix>dcloud</docker.image.prefix>
-
         <redission.version>3.10.1</redission.version>
         <jwt.version>0.7.0</jwt.version>
         <sharding-jdbc.version>4.1.1</sharding-jdbc.version>
-        <!--跳过单元测试-->
-        <skipTests>true</skipTests>
         <junit.version>4.12</junit.version>
         <druid.version>1.1.16</druid.version>
+
+        <!--跳过单元测试-->
+        <skipTests>true</skipTests>
+        <docker.image.prefix>dcloud</docker.image.prefix>
+
     </properties>
 
     <!--锁定版本-->
