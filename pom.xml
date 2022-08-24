@@ -42,7 +42,7 @@
 
         <!--跳过单元测试-->
         <skipTests>true</skipTests>
-        <docker.image.prefix>dcloud</docker.image.prefix>
+        <docker.image.prefix>hd_short_link</docker.image.prefix>
 
     </properties>
 
